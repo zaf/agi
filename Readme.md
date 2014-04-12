@@ -1,8 +1,7 @@
 # agi
 --
 
-To install:
-    "go get github.com/zaf/agi"
+	"To install: go get github.com/zaf/agi"
 
 Package agi implements the Aterisk Gateway Interface. All methods return the AGI
 Protocol error on failure and on success the AGI result is stored in Res slice,
