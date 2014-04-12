@@ -1,7 +1,7 @@
 # agi
 --
 
-	To install: go get github.com/zaf/agi
+#### To install: go get github.com/zaf/agi
 
 	import "github.com/zaf/agi"
 
