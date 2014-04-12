@@ -5,7 +5,7 @@
 
 	import "github.com/zaf/agi"
 
-Package agi implements the Aterisk Gateway Interface. All methods return the AGI
+Package agi implements the Asterisk Gateway Interface. All methods return the AGI
 Protocol error on failure and on success the AGI result is stored in Res slice,
 an element of struct Session. 1st slice element holds the numeric result, 2nd
 element the rest of the results if there are any.
