@@ -145,6 +145,10 @@ func (a *Session) GoSub(context, extension, priority, args string) error {
 
 // Hangup hangs up a channel, Result is 1 on success, -1 if the given channel was not found.
 func (a *Session) Hangup(channel string) error {
+	if channel == "" {
+		a.sendMsg(fmt.Sprintf("HANGUP"))
+		return a.parseResponse()
+	}
 	return a.sendMsg(fmt.Sprintf("HANGUP %s", channel))
 }
 
@@ -393,6 +397,9 @@ func (a *Session) parseResponse() error {
 	line = strings.TrimRight(line, "\n")
 	reply := strings.SplitN(line, " ", 3)
 	if len(reply) < 2 {
+		if reply[0] == "HANGUP" {
+			return fmt.Errorf("client sent a HANGUP request")
+		}
 		return fmt.Errorf("erroneous or partial agi response: %v", reply)
 	}
 	switch reply[0] {
