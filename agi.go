@@ -85,7 +85,7 @@ func (a *Session) DatabaseDelTree(family, keytree string) error {
 // and contains the variable in Res[1].
 func (a *Session) DatabaseGet(family, key string) error {
 	err := a.sendMsg(fmt.Sprintf("DATABASE GET %s %s", family, key))
-	if err == nil && a.Res[0] == "1" {
+	if len(a.Res) > 1 {
 		a.Res[1] = stripPar(a.Res[1])
 	}
 	return err
@@ -111,7 +111,7 @@ func (a *Session) GetData(file, timeout, maxdigits string) error {
 // the variable in Res[1]. Understands complex variable names and builtin variables.
 func (a *Session) GetFullVariable(variable, channel string) error {
 	err := a.sendMsg(fmt.Sprintf("GET FULL VARIABLE %s %s", variable, channel))
-	if err == nil && a.Res[0] == "1" {
+	if len(a.Res) > 1 {
 		a.Res[1] = stripPar(a.Res[1])
 	}
 	return err
@@ -121,7 +121,7 @@ func (a *Session) GetFullVariable(variable, channel string) error {
 // from the channel at the other end and the sample ofset. In case of failure to playback the result is -1.
 func (a *Session) GetOption(filename, escape, timeout string) error {
 	err := a.sendMsg(fmt.Sprintf("GET OPTION %s \"%s\" %s", filename, escape, timeout))
-	if err == nil && a.Res[1] != nil {
+	if len(a.Res) > 1 {
 		a.Res[1] = strings.TrimPrefix(a.Res[1], "endpos=")
 	}
 	return err
@@ -131,7 +131,7 @@ func (a *Session) GetOption(filename, escape, timeout string) error {
 // 1 if variablename is set and contains the variable in Res[1].
 func (a *Session) GetVariable(variable string) error {
 	err := a.sendMsg(fmt.Sprintf("GET VARIABLE %s", variable))
-	if err == nil && a.Res[0] == "1" {
+	if len(a.Res) > 1 {
 		a.Res[1] = stripPar(a.Res[1])
 	}
 	return err
@@ -168,7 +168,7 @@ func (a *Session) ReceiveChar(timeout string) error {
 // or 1 for success, and conatins the string in Res[1].
 func (a *Session) ReceiveText(timeout string) error {
 	err := a.sendMsg(fmt.Sprintf("RECEIVE TEXT %s", timeout))
-	if err == nil && a.Res[0] == "1" {
+	if len(a.Res) > 1 {
 		a.Res[1] = stripPar(a.Res[1])
 	}
 	return err
@@ -325,7 +325,7 @@ func (a *Session) SpeechUnloadGrammar(grammar string) error {
 // automatically stopped and will not be restarted after completion.
 func (a *Session) StreamFile(file, escape, offset string) error {
 	err := a.sendMsg(fmt.Sprintf("STREAM FILE %s \"%s\" %s", file, escape, offset))
-	if err == nil && a.Res[1] != nil {
+	if len(a.Res) > 1 {
 		a.Res[1] = strings.TrimPrefix(a.Res[1], "endpos=")
 	}
 	return err
