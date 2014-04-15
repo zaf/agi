@@ -121,7 +121,7 @@ func (a *Session) GetFullVariable(variable, channel string) error {
 // from the channel at the other end and the sample ofset. In case of failure to playback the result is -1.
 func (a *Session) GetOption(filename, escape, timeout string) error {
 	err := a.sendMsg(fmt.Sprintf("GET OPTION %s \"%s\" %s", filename, escape, timeout))
-	if err == nil {
+	if err == nil && a.Res[1] != nil {
 		a.Res[1] = strings.TrimPrefix(a.Res[1], "endpos=")
 	}
 	return err
@@ -325,7 +325,7 @@ func (a *Session) SpeechUnloadGrammar(grammar string) error {
 // automatically stopped and will not be restarted after completion.
 func (a *Session) StreamFile(file, escape, offset string) error {
 	err := a.sendMsg(fmt.Sprintf("STREAM FILE %s \"%s\" %s", file, escape, offset))
-	if err == nil {
+	if err == nil && a.Res[1] != nil {
 		a.Res[1] = strings.TrimPrefix(a.Res[1], "endpos=")
 	}
 	return err
