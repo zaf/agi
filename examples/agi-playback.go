@@ -58,5 +58,5 @@ func main() {
 
 HANGUP:
 	//Hangup
-	myAgi.Hangup("")
+	myAgi.Hangup()
 }

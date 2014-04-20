@@ -40,5 +40,5 @@ func main() {
 		log.Printf("AGI command returned: %v\n", myAgi.Res)
 	}
 	//Hangup
-	myAgi.Hangup("")
+	myAgi.Hangup()
 }

@@ -49,6 +49,6 @@ func connHandle(c net.Conn) {
 		return
 	}
 	//Hangup
-	myAgi.Hangup("")
+	myAgi.Hangup()
 	return
 }

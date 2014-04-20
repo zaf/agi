@@ -122,7 +122,7 @@ func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 	}
 HANGUP:
 	//Hangup
-	myAgi.Hangup("")
+	myAgi.Hangup()
 	return
 }
 
