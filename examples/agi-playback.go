@@ -37,7 +37,7 @@ func main() {
 	}
 	file = myAgi.Env["arg_1"]
 	// Chech channel status
-	err = myAgi.ChannelStatus("")
+	err = myAgi.ChannelStatus()
 	if err != nil {
 		log.Printf("AGI reply error: %v\n", err)
 		return
@@ -51,7 +51,7 @@ func main() {
 		}
 	}
 	// Playback file
-	err = myAgi.StreamFile(file, "any", "")
+	err = myAgi.StreamFile(file, "any")
 	if err != nil || myAgi.Res[0] != "0" {
 		log.Printf("Error playing back file: %v\n", err)
 	}

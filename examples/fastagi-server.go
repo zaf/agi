@@ -102,7 +102,7 @@ func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 	}
 	file = query["file"][0]
 	// Chech channel status
-	err = myAgi.ChannelStatus("")
+	err = myAgi.ChannelStatus()
 	if err != nil {
 		log.Printf("AGI reply error: %v\n", err)
 		return
@@ -116,7 +116,7 @@ func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 		}
 	}
 	// Playback file
-	err = myAgi.StreamFile(file, "any", "")
+	err = myAgi.StreamFile(file, "any")
 	if err != nil || myAgi.Res[0] != "0" {
 		log.Printf("Error playing back file: %v\n", err)
 	}

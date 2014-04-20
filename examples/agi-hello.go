@@ -30,7 +30,7 @@ func main() {
 		}
 	}
 	//Print a message on asterisk console
-	err = myAgi.Verbose("Hello World", "1")
+	err = myAgi.Verbose("Hello World")
 	if err != nil {
 		log.Printf("AGI reply error: %v\n", err)
 		return

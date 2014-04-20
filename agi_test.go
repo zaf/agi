@@ -110,7 +110,7 @@ func TestCmd(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to initialize new AGI session")
 	}
-	err = a.GetOption("echo", "any", "")
+	err = a.GetOption("echo", "any")
 	if err != nil {
 		t.Error("Failed to parse AGI responce")
 	}

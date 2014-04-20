@@ -3,12 +3,12 @@
 
 #### To install: go get github.com/zaf/agi
 
-	import "github.com/zaf/agi"
+    import "github.com/zaf/agi"
 
-Package agi implements the Asterisk Gateway Interface. All methods return the AGI
-Protocol error on failure and on success the AGI result is stored in Res slice,
-an element of struct Session. 1st slice element holds the numeric result, 2nd
-element the rest of the results if there are any.
+Package agi implements the Asterisk Gateway Interface. All methods return the
+AGI Protocol error on failure and on success the AGI result is stored in Res
+slice, an element of struct Session. 1st slice element holds the numeric result,
+2nd element the rest of the results if there are any.
 
 ## Usage
 
@@ -51,10 +51,10 @@ AsyncagiBreak interrupts Async AGI. Result is always 0.
 #### func (*Session) ChannelStatus
 
 ```go
-func (a *Session) ChannelStatus(channel string) error
+func (a *Session) ChannelStatus(params ...string) error
 ```
-ChannelStatus result contains the status of the connected channel. Result
-values:
+ChannelStatus result contains the status of the given channel, if no channel
+specified checks the current channel. Result values:
 
     0 - Channel is down and available.
     1 - Channel is down, but reserved.
@@ -68,12 +68,13 @@ values:
 #### func (*Session) ControlStreamFile
 
 ```go
-func (a *Session) ControlStreamFile(file, escape, skipms, ffchar, rewchr, pausechr string) error
+func (a *Session) ControlStreamFile(file, escape string, params ...interface{}) error
 ```
 ControlStreamFile sends audio file on channel and allows the listener to control
-the stream. Result is 0 if playback completes without a digit being pressed, or
-the ASCII numerical value of the digit if one was pressed, or -1 on error or if
-the channel was disconnected.
+the stream. Optional parameters: skipms, ffchar - Defaults to *, rewchr -
+Defaults to #, pausechr. Result is 0 if playback completes without a digit being
+pressed, or the ASCII numerical value of the digit if one was pressed, or -1 on
+error or if the channel was disconnected.
 
 #### func (*Session) DatabaseDel
 
@@ -123,28 +124,28 @@ returns, or -2 on failure to find application.
 #### func (*Session) GetData
 
 ```go
-func (a *Session) GetData(file, timeout, maxdigits string) error
+func (a *Session) GetData(file string, params ...int) error
 ```
-GetData prompts for DTMF on a channel. Result contains the digits received from
-the channel at the other end.
+GetData prompts for DTMF on a channel. Optional parameters: timeout, maxdigits.
+Result contains the digits received from the channel at the other end.
 
 #### func (*Session) GetFullVariable
 
 ```go
-func (a *Session) GetFullVariable(variable, channel string) error
+func (a *Session) GetFullVariable(variable string, params ...string) error
 ```
-GetFullVariable evaluates a channel expression. Result is 1 if variablename is
-set and contains the variable in Res[1]. Understands complex variable names and
-builtin variables.
+GetFullVariable evaluates a channel expression, if no channel is specified the
+current channel is used. Result is 1 if variablename is set and contains the
+variable in Res[1]. Understands complex variable names and builtin variables.
 
 #### func (*Session) GetOption
 
 ```go
-func (a *Session) GetOption(filename, escape, timeout string) error
+func (a *Session) GetOption(filename, escape string, params ...int) error
 ```
-GetOption streams file, prompts for DTMF with timeout. Result contains the
-digits received from the channel at the other end and the sample ofset. In case
-of failure to playback the result is -1.
+GetOption streams file, prompts for DTMF with timeout. Optiona parameter:
+timeout. Result contains the digits received from the channel at the other end
+and the sample ofset. In case of failure to playback the result is -1.
 
 #### func (*Session) GetVariable
 
@@ -165,7 +166,7 @@ to the dialplan with execution of a Return().
 #### func (*Session) Hangup
 
 ```go
-func (a *Session) Hangup(channel string) error
+func (a *Session) Hangup(params ...string) error
 ```
 Hangup hangs up a channel, Result is 1 on success, -1 if the given channel was
 not found.
@@ -173,14 +174,14 @@ not found.
 #### func (*Session) Noop
 
 ```go
-func (a *Session) Noop() error
+func (a *Session) Noop(params ...interface{}) error
 ```
 Noop does nothing. Result is always 0.
 
 #### func (*Session) ReceiveChar
 
 ```go
-func (a *Session) ReceiveChar(timeout string) error
+func (a *Session) ReceiveChar(timeout int) error
 ```
 ReceiveChar receives one character from channels supporting it. Result contains
 the decimal value of the character if one is received, or 0 if the channel does
@@ -189,7 +190,7 @@ not support text reception. Result is -1 only on error/hangup.
 #### func (*Session) ReceiveText
 
 ```go
-func (a *Session) ReceiveText(timeout string) error
+func (a *Session) ReceiveText(timeout int) error
 ```
 ReceiveText receives text from channels supporting it. Result is -1 for failure
 or 1 for success, and conatins the string in Res[1].
@@ -197,16 +198,17 @@ or 1 for success, and conatins the string in Res[1].
 #### func (*Session) RecordFile
 
 ```go
-func (a *Session) RecordFile(file, format, escape, timeout, samples, beep, silence string) error
+func (a *Session) RecordFile(file, format, escape string, timeout int, params ...interface{}) error
 ```
 RecordFile records to a given file. The format will specify what kind of file
 will be recorded. The timeout is the maximum record time in milliseconds, or -1
-for no timeout, offset samples is optional, and, if provided, will seek to the
-offset without exceeding the end of the file. silence is the number of seconds
-of silence allowed before the function returns despite the lack of dtmf digits
-or reaching timeout. Negative values of Res[0] mean error, 1 means success. Rest
-of the result is a set of different inconsistent values depending on each case,
-please refer to res_agi.c in asterisk source code for further info.
+for no timeout. Optional parameters: offset samples if provided will seek to the
+offset without exceeding the end of the file. Silence (always prefixed with
+s=)is the number of seconds of silence allowed before the function returns
+despite the lack of dtmf digits or reaching timeout. Negative values of Res[0]
+mean error, 1 means success. Rest of the result is a set of different
+inconsistent values depending on each case, please refer to res_agi.c in
+asterisk source code for further info.
 
 #### func (*Session) SayAlpha
 
@@ -220,38 +222,41 @@ pressed or -1 on error/hangup.
 #### func (*Session) SayDate
 
 ```go
-func (a *Session) SayDate(date, escape string) error
+func (a *Session) SayDate(date int, escape string) error
 ```
-SayDate says a given date. Result is 0 if playback completes without a digit
-being pressed, the ASCII numerical value of the digit if one was pressed or -1
-on error/hangup.
+SayDate says a given date (Unix time format). Result is 0 if playback completes
+without a digit being pressed, the ASCII numerical value of the digit if one was
+pressed or -1 on error/hangup.
 
 #### func (*Session) SayDateTime
 
 ```go
-func (a *Session) SayDateTime(time, escape, format, tz string) error
+func (a *Session) SayDateTime(time int, escape string, params ...string) error
 ```
-SayDateTime says a given time as specified by the format given. Result is 0 if
-playback completes without a digit being pressed, the ASCII numerical value of
-the digit if one was pressed or -1 on error/hangup.
+SayDateTime says a given time (Unix time format). Optional parameters: fomrat,
+the format the time should be said in. See voicemail.conf (defaults to ABdY
+'digits/at' IMp). timezone, acceptable values can be found in
+/usr/share/zoneinfo. Defaults to machine default. Result is 0 if playback
+completes without a digit being pressed, the ASCII numerical value of the digit
+if one was pressed or -1 on error/hangup.
 
 #### func (*Session) SayDigits
 
 ```go
-func (a *Session) SayDigits(number, escape string) error
+func (a *Session) SayDigits(digit int, escape string) error
 ```
-SayDigits says a given digit string. Result is 0 if playback completes without a
-digit being pressed, the ASCII numerical value of the digit if one was pressed
-or -1 on error/hangup.
+SayDigits says a given digit. Result is 0 if playback completes without a digit
+being pressed, the ASCII numerical value of the digit if one was pressed or -1
+on error/hangup.
 
 #### func (*Session) SayNumber
 
 ```go
-func (a *Session) SayNumber(num, escape, gender string) error
+func (a *Session) SayNumber(num int, escape string, params ...string) error
 ```
-SayNumber says a given number. Result is 0 if playback completes without a digit
-being pressed, the ASCII numerical value of the digit if one was pressed or -1
-on error/hangup.
+SayNumber says a given number. Optional parameter gneder. Result is 0 if
+playback completes without a digit being pressed, the ASCII numerical value of
+the digit if one was pressed or -1 on error/hangup.
 
 #### func (*Session) SayPhonetic
 
@@ -265,11 +270,11 @@ digit if one was pressed, or -1 on error/hangup
 #### func (*Session) SayTime
 
 ```go
-func (a *Session) SayTime(time, escape string) error
+func (a *Session) SayTime(time int, escape string) error
 ```
-SayTime says a given time. Result is 0 if playback completes without a digit
-being pressed, or the ASCII numerical value of the digit if one was pressed or
--1 on error/hangup.
+SayTime says a given time (Unix time format). Result is 0 if playback completes
+without a digit being pressed, or the ASCII numerical value of the digit if one
+was pressed or -1 on error/hangup.
 
 #### func (*Session) SendImage
 
@@ -292,10 +297,11 @@ error/hangup.
 #### func (*Session) SetAutohangup
 
 ```go
-func (a *Session) SetAutohangup(time string) error
+func (a *Session) SetAutohangup(time int) error
 ```
-SetAutohangup autohangups channel in some time. Setting time to 0 will cause the
-autohangup feature to be disabled on this channel. Result is always 0.
+SetAutohangup autohangups channel after a number of seconds. Setting time to 0
+will cause the autohangup feature to be disabled on this channel. Result is
+always 0.
 
 #### func (*Session) SetCallerid
 
@@ -321,10 +327,11 @@ SetExtension changes channel extension. Result is always 0.
 #### func (*Session) SetMusic
 
 ```go
-func (a *Session) SetMusic(opt, class string) error
+func (a *Session) SetMusic(opt string, params ...string) error
 ```
-SetMusic enables/disables Music on hold generator. If class is not specified,
-then the default music on hold class will be used. Result is always 0.
+SetMusic enables/disables Music on hold generator by settong opt to "on" or
+"off". Optional parameter: class, if not specified, then the default music on
+hold class will be used. Result is always 0.
 
 #### func (*Session) SetPriority
 
@@ -337,7 +344,7 @@ priority or label. Result is always 0.
 #### func (*Session) SetVariable
 
 ```go
-func (a *Session) SetVariable(variable, value string) error
+func (a *Session) SetVariable(variable string, value interface{}) error
 ```
 SetVariable sets a channel variable. Result is always 1.
 
@@ -403,13 +410,14 @@ SpeechUnloadGrammar unloads a grammar. Result is 1 on success 0 on error.
 #### func (*Session) StreamFile
 
 ```go
-func (a *Session) StreamFile(file, escape, offset string) error
+func (a *Session) StreamFile(file, escape string, params ...int) error
 ```
-StreamFile sends audio file on channel. Result is 0 if playback completes
-without a digit being pressed, the ASCII numerical value of the digit if one was
-pressed, or -1 on error or if the channel was disconnected. If musiconhold is
-playing before calling stream file it will be automatically stopped and will not
-be restarted after completion.
+StreamFile sends audio file on channel. Optional parameter: sample offset for
+the playback start position. Result is 0 if playback completes without a digit
+being pressed, the ASCII numerical value of the digit if one was pressed, or -1
+on error or if the channel was disconnected. If musiconhold is playing before
+calling stream file it will be automatically stopped and will not be restarted
+after completion.
 
 #### func (*Session) TddMode
 
@@ -422,15 +430,15 @@ channel is not TDD-capable.
 #### func (*Session) Verbose
 
 ```go
-func (a *Session) Verbose(msg, level string) error
+func (a *Session) Verbose(msg string, params ...int) error
 ```
-Verbose logs a message to the asterisk verbose log. level is the verbose level
-(1-4). Result is always 1.
+Verbose logs a message to the asterisk verbose log. Optional variable: level,
+the verbose level (1-4). Result is always 1.
 
 #### func (*Session) WaitForDigit
 
 ```go
-func (a *Session) WaitForDigit(timeout string) error
+func (a *Session) WaitForDigit(timeout int) error
 ```
 WaitForDigit waits for a digit to be pressed. Use -1 for the timeout value if
 you desire the call to block indefinitely. Result is -1 on channel failure, 0 if
