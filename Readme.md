@@ -51,7 +51,7 @@ AsyncagiBreak interrupts Async AGI. Result is always 0.
 #### func (*Session) ChannelStatus
 
 ```go
-func (a *Session) ChannelStatus(params ...string) error
+func (a *Session) ChannelStatus(channel ...string) error
 ```
 ChannelStatus result contains the status of the given channel, if no channel
 specified checks the current channel. Result values:
@@ -132,7 +132,7 @@ Result contains the digits received from the channel at the other end.
 #### func (*Session) GetFullVariable
 
 ```go
-func (a *Session) GetFullVariable(variable string, params ...string) error
+func (a *Session) GetFullVariable(variable string, channel ...string) error
 ```
 GetFullVariable evaluates a channel expression, if no channel is specified the
 current channel is used. Result is 1 if variablename is set and contains the
@@ -141,7 +141,7 @@ variable in Res[1]. Understands complex variable names and builtin variables.
 #### func (*Session) GetOption
 
 ```go
-func (a *Session) GetOption(filename, escape string, params ...int) error
+func (a *Session) GetOption(filename, escape string, timeout ...int) error
 ```
 GetOption streams file, prompts for DTMF with timeout. Optiona parameter:
 timeout. Result contains the digits received from the channel at the other end
@@ -166,7 +166,7 @@ to the dialplan with execution of a Return().
 #### func (*Session) Hangup
 
 ```go
-func (a *Session) Hangup(params ...string) error
+func (a *Session) Hangup(channel ...string) error
 ```
 Hangup hangs up a channel, Result is 1 on success, -1 if the given channel was
 not found.
@@ -252,9 +252,9 @@ on error/hangup.
 #### func (*Session) SayNumber
 
 ```go
-func (a *Session) SayNumber(num int, escape string, params ...string) error
+func (a *Session) SayNumber(num int, escape string, gender ...string) error
 ```
-SayNumber says a given number. Optional parameter gneder. Result is 0 if
+SayNumber says a given number. Optional parameter gender. Result is 0 if
 playback completes without a digit being pressed, the ASCII numerical value of
 the digit if one was pressed or -1 on error/hangup.
 
@@ -327,7 +327,7 @@ SetExtension changes channel extension. Result is always 0.
 #### func (*Session) SetMusic
 
 ```go
-func (a *Session) SetMusic(opt string, params ...string) error
+func (a *Session) SetMusic(opt string, class ...string) error
 ```
 SetMusic enables/disables Music on hold generator by settong opt to "on" or
 "off". Optional parameter: class, if not specified, then the default music on
@@ -410,7 +410,7 @@ SpeechUnloadGrammar unloads a grammar. Result is 1 on success 0 on error.
 #### func (*Session) StreamFile
 
 ```go
-func (a *Session) StreamFile(file, escape string, params ...int) error
+func (a *Session) StreamFile(file, escape string, offset ...int) error
 ```
 StreamFile sends audio file on channel. Optional parameter: sample offset for
 the playback start position. Result is 0 if playback completes without a digit
@@ -430,7 +430,7 @@ channel is not TDD-capable.
 #### func (*Session) Verbose
 
 ```go
-func (a *Session) Verbose(msg string, params ...int) error
+func (a *Session) Verbose(msg string, level ...int) error
 ```
 Verbose logs a message to the asterisk verbose log. Optional variable: level,
 the verbose level (1-4). Result is always 1.

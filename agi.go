@@ -61,9 +61,9 @@ func (a *Session) AsyncagiBreak() error {
 //     5 - Remote end is ringing.
 //     6 - Line is up.
 //     7 - Line is busy.
-func (a *Session) ChannelStatus(params ...string) error {
-	if len(params) > 0 {
-		return a.sendMsg(fmt.Sprintf("CHANNEL STATUS %s", params[0]))
+func (a *Session) ChannelStatus(channel ...string) error {
+	if len(channel) > 0 {
+		return a.sendMsg(fmt.Sprintf("CHANNEL STATUS %s", channel[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("CHANNEL STATUS"))
 }
@@ -124,10 +124,10 @@ func (a *Session) GetData(file string, params ...int) error {
 // GetFullVariable evaluates a channel expression, if no channel is specified the current channel is used.
 // Result is 1 if variablename is set and contains the variable in Res[1].
 // Understands complex variable names and builtin variables.
-func (a *Session) GetFullVariable(variable string, params ...string) error {
+func (a *Session) GetFullVariable(variable string, channel ...string) error {
 	var err error
-	if len(params) > 0 {
-		err = a.sendMsg(fmt.Sprintf("GET FULL VARIABLE %s %s", variable, params[0]))
+	if len(channel) > 0 {
+		err = a.sendMsg(fmt.Sprintf("GET FULL VARIABLE %s %s", variable, channel[0]))
 	} else {
 		err = a.sendMsg(fmt.Sprintf("GET FULL VARIABLE %s", variable))
 	}
@@ -140,10 +140,10 @@ func (a *Session) GetFullVariable(variable string, params ...string) error {
 // GetOption streams file, prompts for DTMF with timeout. Optiona parameter: timeout.
 // Result contains the digits received from the channel at the other end and the sample ofset.
 // In case of failure to playback the result is -1.
-func (a *Session) GetOption(filename, escape string, params ...int) error {
+func (a *Session) GetOption(filename, escape string, timeout ...int) error {
 	var err error
-	if len(params) > 0 {
-		err = a.sendMsg(fmt.Sprintf("GET OPTION %s \"%s\" %d", filename, escape, params[0]))
+	if len(timeout) > 0 {
+		err = a.sendMsg(fmt.Sprintf("GET OPTION %s \"%s\" %d", filename, escape, timeout[0]))
 	} else {
 		err = a.sendMsg(fmt.Sprintf("GET OPTION %s \"%s\"", filename, escape))
 	}
@@ -170,9 +170,9 @@ func (a *Session) GoSub(context, extension, priority, args string) error {
 }
 
 // Hangup hangs up a channel, Result is 1 on success, -1 if the given channel was not found.
-func (a *Session) Hangup(params ...string) error {
-	if len(params) > 0 {
-		return a.sendMsg(fmt.Sprintf("HANGUP %s", params[0]))
+func (a *Session) Hangup(channel ...string) error {
+	if len(channel) > 0 {
+		return a.sendMsg(fmt.Sprintf("HANGUP %s", channel[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("HANGUP"))
 }
@@ -250,11 +250,11 @@ func (a *Session) SayDigits(digit int, escape string) error {
 	return a.sendMsg(fmt.Sprintf("SAY DIGITS %d \"%s\"", digit, escape))
 }
 
-// SayNumber says a given number. Optional parameter gneder. Result is 0 if playback completes
+// SayNumber says a given number. Optional parameter gender. Result is 0 if playback completes
 // without a digit being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hangup.
-func (a *Session) SayNumber(num int, escape string, params ...string) error {
-	if len(params) > 0 {
-		return a.sendMsg(fmt.Sprintf("SAY NUMBER %d \"%s\" %s", num, escape, params[0]))
+func (a *Session) SayNumber(num int, escape string, gender ...string) error {
+	if len(gender) > 0 {
+		return a.sendMsg(fmt.Sprintf("SAY NUMBER %d \"%s\" %s", num, escape, gender[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("SAY NUMBER %d \"%s\"", num, escape))
 }
@@ -307,9 +307,9 @@ func (a *Session) SetExtension(ext string) error {
 // SetMusic enables/disables Music on hold generator by settong opt to "on" or "off".
 // Optional parameter: class, if not specified, then the default music on hold class will be used.
 // Result is always 0.
-func (a *Session) SetMusic(opt string, params ...string) error {
-	if len(params) > 0 {
-		return a.sendMsg(fmt.Sprintf("SET MUSIC %s %s", opt, params[0]))
+func (a *Session) SetMusic(opt string, class ...string) error {
+	if len(class) > 0 {
+		return a.sendMsg(fmt.Sprintf("SET MUSIC %s %s", opt, class[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("SET MUSIC %s", opt))
 }
@@ -372,10 +372,10 @@ func (a *Session) SpeechUnloadGrammar(grammar string) error {
 // of the digit if one was pressed, or -1 on error or if the channel was disconnected.
 // If musiconhold is playing before calling stream file it will be automatically stopped
 // and will not be restarted after completion.
-func (a *Session) StreamFile(file, escape string, params ...int) error {
+func (a *Session) StreamFile(file, escape string, offset ...int) error {
 	var err error
-	if len(params) > 0 {
-		err = a.sendMsg(fmt.Sprintf("STREAM FILE %s \"%s\" %d", file, escape, params[0]))
+	if len(offset) > 0 {
+		err = a.sendMsg(fmt.Sprintf("STREAM FILE %s \"%s\" %d", file, escape, offset[0]))
 	} else {
 		err = a.sendMsg(fmt.Sprintf("STREAM FILE %s \"%s\"", file, escape))
 	}
@@ -392,9 +392,9 @@ func (a *Session) TddMode(mode string) error {
 
 // Verbose logs a message to the asterisk verbose log.
 // Optional variable: level, the verbose level (1-4). Result is always 1.
-func (a *Session) Verbose(msg string, params ...int) error {
-	if len(params) > 0 {
-		return a.sendMsg(fmt.Sprintf("VERBOSE %s %d", msg, params[0]))
+func (a *Session) Verbose(msg string, level ...int) error {
+	if len(level) > 0 {
+		return a.sendMsg(fmt.Sprintf("VERBOSE %s %d", msg, level[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("VERBOSE %s", msg))
 }
