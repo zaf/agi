@@ -227,7 +227,7 @@ func (a *Session) SayAlpha(str, escape string) error {
 
 // SayDate says a given date (Unix time format). Result is 0 if playback completes without a digit
 // being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hangup.
-func (a *Session) SayDate(date int, escape string) error {
+func (a *Session) SayDate(date int64, escape string) error {
 	return a.sendMsg(fmt.Sprintf("SAY DATE %d \"%s\"", date, escape))
 }
 
@@ -236,7 +236,7 @@ func (a *Session) SayDate(date int, escape string) error {
 // timezone, acceptable values can be found in /usr/share/zoneinfo. Defaults to machine default.
 // Result is 0 if playback completes without a digit being pressed, the ASCII numerical
 // value of the digit if one was pressed or -1 on error/hangup.
-func (a *Session) SayDateTime(time int, escape string, params ...string) error {
+func (a *Session) SayDateTime(time int64, escape string, params ...string) error {
 	cmd := fmt.Sprintf("%d \"%s\"", time, escape)
 	for _, par := range params {
 		cmd = fmt.Sprintf("%s %v", cmd, par)
@@ -267,7 +267,7 @@ func (a *Session) SayPhonetic(str, escape string) error {
 
 // SayTime says a given time (Unix time format). Result is 0 if playback completes without a digit
 // being pressed, or the ASCII numerical value of the digit if one was pressed or -1 on error/hangup.
-func (a *Session) SayTime(time int, escape string) error {
+func (a *Session) SayTime(time int64, escape string) error {
 	return a.sendMsg(fmt.Sprintf("SAY TIME %d \"%s\"", time, escape))
 }
 
