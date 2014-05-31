@@ -280,7 +280,7 @@ func (a *Session) SendImage(image string) error {
 // SendText sends text to channels supporting it. Result is 0 if text is sent, or if the channel
 // does not support text transmission. Result is -1 only on error/hangup.
 func (a *Session) SendText(text string) error {
-	return a.sendMsg(fmt.Sprintf("SEND TEXT %s", text))
+	return a.sendMsg(fmt.Sprintf("SEND TEXT \"%s\"", text))
 }
 
 // SetAutohangup autohangups channel after a number of seconds. Setting time to 0 will cause the autohangup
@@ -322,7 +322,7 @@ func (a *Session) SetPriority(priority string) error {
 
 // SetVariable sets a channel variable. Result is always 1.
 func (a *Session) SetVariable(variable string, value interface{}) error {
-	return a.sendMsg(fmt.Sprintf("SET VARIABLE %s %v", variable, value))
+	return a.sendMsg(fmt.Sprintf("SET VARIABLE \"%s\" \"%v\"", variable, value))
 }
 
 // SpeechActivateGrammar activates a grammar. Result is 1 on success 0 on error.
@@ -394,9 +394,9 @@ func (a *Session) TddMode(mode string) error {
 // Optional variable: level, the verbose level (1-4). Result is always 1.
 func (a *Session) Verbose(msg string, level ...int) error {
 	if len(level) > 0 {
-		return a.sendMsg(fmt.Sprintf("VERBOSE %s %d", msg, level[0]))
+		return a.sendMsg(fmt.Sprintf("VERBOSE \"%s\" %d", msg, level[0]))
 	}
-	return a.sendMsg(fmt.Sprintf("VERBOSE %s", msg))
+	return a.sendMsg(fmt.Sprintf("VERBOSE \"%s\"", msg))
 }
 
 // WaitForDigit waits for a digit to be pressed. Use -1 for the timeout value if you desire
