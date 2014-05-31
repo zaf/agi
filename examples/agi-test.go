@@ -123,7 +123,7 @@ func testAgi(sess *agi.Session) {
 	}
 
 	sess.Verbose("6.  Testing redord...")
-	sess.RecordFile("testagi", "gsm", "any", 3000)
+	sess.RecordFile("/tmp/testagi", "alaw", "any", 3000)
 	tests++
 	if sess.Res == nil || sess.Res[0] != "0" {
 		sess.Verbose("Failed.")
@@ -133,7 +133,7 @@ func testAgi(sess *agi.Session) {
 	}
 
 	sess.Verbose("7.  Testing record playback...")
-	sess.StreamFile("testagi", "")
+	sess.StreamFile("/tmp/testagi", "")
 	tests++
 	if sess.Res == nil || sess.Res[0] != "0" {
 		sess.Verbose("Failed.")
