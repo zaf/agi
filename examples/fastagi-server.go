@@ -116,7 +116,7 @@ func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 		}
 	}
 	// Playback file
-	err = myAgi.StreamFile(file, "any")
+	err = myAgi.StreamFile(file, "1234567890#*")
 	if err != nil || myAgi.Res[0] != "0" {
 		log.Printf("Error playing back file: %v\n", err)
 	}

@@ -123,7 +123,7 @@ func testAgi(sess *agi.Session) {
 	}
 
 	sess.Verbose("6.  Testing redord...")
-	sess.RecordFile("/tmp/testagi", "alaw", "any", 3000)
+	sess.RecordFile("/tmp/testagi", "alaw", "1234567890*#", 3000)
 	tests++
 	if sess.Res == nil || sess.Res[0] != "0" {
 		sess.Verbose("Failed.")
