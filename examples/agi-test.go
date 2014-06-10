@@ -72,7 +72,57 @@ func spawnAgi(c net.Conn) {
 func testAgi(sess *agi.Session) {
 	//Perform some tests
 	var tests, pass, fail int
-	sess.Verbose("1.  Testing streamfile...")
+	sess.Verbose("1.  Testing answer...")
+	sess.Answer()
+	tests++
+	if sess.Res == nil || sess.Res[0] != "0" {
+		sess.Verbose("Failed.")
+		fail++
+	} else {
+		pass++
+	}
+
+	sess.Verbose("2.  Testing channelstatus...")
+	sess.ChannelStatus()
+	tests++
+	if sess.Res == nil || sess.Res[0] != "6" {
+		sess.Verbose("Failed.")
+		fail++
+	} else {
+		pass++
+	}
+
+	sess.Verbose("3.  Testing databaseput...")
+	sess.DatabasePut("test", "my_key", "true")
+	tests++
+	if sess.Res == nil || sess.Res[0] != "1" {
+		sess.Verbose("Failed.")
+		fail++
+	} else {
+		pass++
+	}
+
+	sess.Verbose("4.  Testing databaseget...")
+	sess.DatabaseGet("test", "my_key")
+	tests++
+	if sess.Res == nil || sess.Res[0] != "1" {
+		sess.Verbose("Failed.")
+		fail++
+	} else {
+		pass++
+	}
+
+	sess.Verbose("5.  Testing databasedel...")
+	sess.DatabaseDel("test", "my_key")
+	tests++
+	if sess.Res == nil || sess.Res[0] != "1" {
+		sess.Verbose("Failed.")
+		fail++
+	} else {
+		pass++
+	}
+
+	sess.Verbose("6.  Testing streamfile...")
 	sess.StreamFile("beep", "")
 	tests++
 	if sess.Res == nil || sess.Res[0] != "0" {
@@ -82,7 +132,7 @@ func testAgi(sess *agi.Session) {
 		pass++
 	}
 
-	sess.Verbose("2.  Testing sendtext...")
+	sess.Verbose("7.  Testing sendtext...")
 	sess.SendText("Hello World")
 	tests++
 	if sess.Res == nil || sess.Res[0] != "0" {
@@ -92,7 +142,7 @@ func testAgi(sess *agi.Session) {
 		pass++
 	}
 
-	sess.Verbose("3.  Testing sendimage...")
+	sess.Verbose("8.  Testing sendimage...")
 	sess.SendImage("asterisk-image")
 	tests++
 	if sess.Res == nil || sess.Res[0] != "0" {
@@ -102,7 +152,7 @@ func testAgi(sess *agi.Session) {
 		pass++
 	}
 
-	sess.Verbose("4.  Testing saynumber...")
+	sess.Verbose("9.  Testing saynumber...")
 	sess.SayNumber(192837465, "")
 	tests++
 	if sess.Res == nil || sess.Res[0] != "0" {
@@ -112,7 +162,7 @@ func testAgi(sess *agi.Session) {
 		pass++
 	}
 
-	sess.Verbose("5.  Testing waitdtmf...")
+	sess.Verbose("10.  Testing waitdtmf...")
 	sess.WaitForDigit(3000)
 	tests++
 	if sess.Res == nil || sess.Res[0] != "0" {
@@ -122,7 +172,7 @@ func testAgi(sess *agi.Session) {
 		pass++
 	}
 
-	sess.Verbose("6.  Testing redord...")
+	sess.Verbose("11.  Testing redord...")
 	sess.RecordFile("/tmp/testagi", "alaw", "1234567890*#", 3000)
 	tests++
 	if sess.Res == nil || sess.Res[0] != "0" {
@@ -132,7 +182,7 @@ func testAgi(sess *agi.Session) {
 		pass++
 	}
 
-	sess.Verbose("7.  Testing record playback...")
+	sess.Verbose("12.  Testing record playback...")
 	sess.StreamFile("/tmp/testagi", "")
 	tests++
 	if sess.Res == nil || sess.Res[0] != "0" {
@@ -142,7 +192,7 @@ func testAgi(sess *agi.Session) {
 		pass++
 	}
 
-	sess.Verbose("8.  Testing set variable...")
+	sess.Verbose("13.  Testing set variable...")
 	sess.SetVariable("testagi", "foo")
 	tests++
 	if sess.Res == nil || sess.Res[0] != "1" {
@@ -152,7 +202,7 @@ func testAgi(sess *agi.Session) {
 		pass++
 	}
 
-	sess.Verbose("9.  Testing get full variable...")
+	sess.Verbose("14.  Testing get full variable...")
 	sess.GetFullVariable("testagi")
 	tests++
 	if sess.Res == nil || sess.Res[0] != "1" {
@@ -162,7 +212,7 @@ func testAgi(sess *agi.Session) {
 		pass++
 	}
 
-	sess.Verbose("10. Testing exec...")
+	sess.Verbose("15. Testing exec...")
 	sess.Exec("Wait", "3")
 	tests++
 	if sess.Res == nil || sess.Res[0] != "0" {
