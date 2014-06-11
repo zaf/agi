@@ -83,7 +83,15 @@ func TestRes(t *testing.T) {
 	}
 	err = a.parseResponse()
 	if err == nil {
+		t.Error("No error after parsing AGI 520 response containing usage details.")
+	}
+	err = a.parseResponse()
+	if err == nil {
 		t.Error("No error after parsing a partial AGI response.")
+	}
+	err = a.parseResponse()
+	if err == nil {
+		t.Error("No error after parsing an empty AGI response.")
 	}
 	err = a.parseResponse()
 	if err == nil {
@@ -144,6 +152,21 @@ func BenchmarkParseEnv(b *testing.B) {
 	}
 }
 
+// Benchmark AGI response parsing
+func BenchmarkParseRes(b *testing.B) {
+	var a Session
+	data := genRes()
+	for i := 0; i < b.N; i++ {
+		a.Buf = bufio.NewReadWriter(
+			bufio.NewReader(bytes.NewReader(data)),
+			nil,
+		)
+		for k := 0; k < 10; k++ {
+			a.parseResponse()
+		}
+	}
+}
+
 // Generate AGI environment data
 func genEnv() []byte {
 	var agiData []byte
@@ -183,7 +206,8 @@ func genRes() []byte {
 	res = append(res, "510 Invalid or unknown command\n"...)
 	res = append(res, "511 Command Not Permitted on a dead channel\n"...)
 	res = append(res, "520 Invalid command syntax.  Proper usage not available.\n"...)
-	res = append(res, "100\n"...)
+	res = append(res, "520-Invalid command syntax.  Proper usage follows:\nAnswers channel if not already in answer state. Returns -1 on channel failure, or 0 if successful.\n"...)
+	res = append(res, "200\n"...)
 	res = append(res, "\n\n"...)
 	res = append(res, "some random reply that we are not supposed to get\n"...)
 	return res
