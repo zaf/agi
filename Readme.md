@@ -205,10 +205,11 @@ will be recorded. The timeout is the maximum record time in milliseconds, or -1
 for no timeout. Optional parameters: offset samples if provided will seek to the
 offset without exceeding the end of the file. Silence (always prefixed with
 s=)is the number of seconds of silence allowed before the function returns
-despite the lack of dtmf digits or reaching timeout. Negative values of Res[0]
-mean error, 1 means success. Rest of the result is a set of different
-inconsistent values depending on each case, please refer to res_agi.c in
-asterisk source code for further info.
+despite the lack of DTMF digits or reaching timeout. Negative values of Res[0]
+mean error. Res[0] equals 0 if recording was successful without any DTMF digit
+received, or the ASCII numerical value of the digit if one was received. Rest of
+the result is a set of different inconsistent values depending on each case,
+please refer to res_agi.c in asterisk source code for further info.
 
 #### func (*Session) SayAlpha
 
@@ -442,5 +443,5 @@ func (a *Session) WaitForDigit(timeout int) error
 ```
 WaitForDigit waits for a digit to be pressed. Use -1 for the timeout value if
 you desire the call to block indefinitely. Result is -1 on channel failure, 0 if
-no digit is received in the timeout, or the numerical value of the ascii of the
-digit if one is received.
+no digit is received in the timeout, or the ASCII numerical value of the digit
+if one is received.

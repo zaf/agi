@@ -185,7 +185,7 @@ func testAgi(sess *agi.Session) {
 
 	sess.Verbose("Testing redord...")
 	sess.RecordFile("/tmp/testagi", "alaw", "1234567890*#", 3000)
-	if sess.Res == nil || sess.Res[0] != "0" {
+	if sess.Res == nil || sess.Res[0] == "-1" {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
