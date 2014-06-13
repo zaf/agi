@@ -173,9 +173,9 @@ func testAgi(sess *agi.Session) {
 	}
 	tests++
 
-	sess.Verbose("Testing waitdtmf...")
+	sess.Verbose("Testing wait for digit...")
 	sess.WaitForDigit(3000)
-	if sess.Res == nil || sess.Res[0] != "0" {
+	if sess.Res == nil || sess.Res[0] == "-1" {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -215,7 +215,7 @@ func testAgi(sess *agi.Session) {
 
 	sess.Verbose("Testing get variable...")
 	sess.GetVariable("testagi")
-	if sess.Res == nil || sess.Res[0] != "1" {
+	if sess.Res == nil || sess.Res[0] != "1" || sess.Res[1] != "foo" {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -225,7 +225,7 @@ func testAgi(sess *agi.Session) {
 
 	sess.Verbose("Testing get full variable...")
 	sess.GetFullVariable("${testagi}")
-	if sess.Res == nil || sess.Res[0] != "1" {
+	if sess.Res == nil || sess.Res[0] != "1" || sess.Res[1] != "foo" {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
