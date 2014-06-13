@@ -86,7 +86,7 @@ DatabaseDel removes database key/value. Result is 1 if successful, 0 otherwise.
 #### func (*Session) DatabaseDelTree
 
 ```go
-func (a *Session) DatabaseDelTree(family, keytree string) error
+func (a *Session) DatabaseDelTree(family string, keytree ...string) error
 ```
 DatabaseDelTree removes database keytree/value. Result is 1 if successful, 0
 otherwise.

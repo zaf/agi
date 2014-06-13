@@ -86,7 +86,7 @@ func (a *Session) DatabaseDel(family, key string) error {
 }
 
 // DatabaseDelTree removes database keytree/value. Result is 1 if successful, 0 otherwise.
-func (a *Session) DatabaseDelTree(family, keytree string) error {
+func (a *Session) DatabaseDelTree(family string, keytree ...string) error {
 	return a.sendMsg(fmt.Sprintf("DATABASE DELTREE %s %s", family, keytree))
 }
 
