@@ -89,9 +89,8 @@ func (a *Session) DatabaseDel(family, key string) error {
 func (a *Session) DatabaseDelTree(family string, keytree ...string) error {
 	if len(keytree) > 0 {
 		return a.sendMsg(fmt.Sprintf("DATABASE DELTREE %s %s", family, keytree[0]))
-	} else {
-		return a.sendMsg(fmt.Sprintf("DATABASE DELTREE %s", family))
 	}
+	return a.sendMsg(fmt.Sprintf("DATABASE DELTREE %s", family))
 }
 
 // DatabaseGet gets database value. Result is 0 if key is not set, 1 if key is set
