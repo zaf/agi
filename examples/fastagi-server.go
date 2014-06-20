@@ -22,6 +22,7 @@ import (
 	"os/signal"
 	"runtime"
 	"sync"
+	"sync/atomic"
 )
 
 var (
@@ -36,7 +37,7 @@ func main() {
 	flag.Parse()
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
-	shutdown := false
+	var shutdown int32
 
 	addr := net.JoinHostPort(*listen, *port)
 	log.Printf("Starting FastAGI server on %v\n", addr)
@@ -48,7 +49,7 @@ func main() {
 	wg := new(sync.WaitGroup)
 	for i := 0; i < *listeners; i++ {
 		go func() {
-			for !shutdown {
+			for atomic.LoadInt32(&shutdown) == 0 {
 				conn, err := listener.Accept()
 				if err != nil {
 					log.Println(err)
@@ -64,7 +65,7 @@ func main() {
 	}
 	signal := <-c
 	log.Printf("Received %v, Waiting for remaining sessions to end and exit.\n", signal)
-	shutdown = true
+	atomic.StoreInt32(&shutdown, 1)
 	wg.Wait()
 }
 
