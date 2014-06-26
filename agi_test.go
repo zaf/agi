@@ -169,7 +169,7 @@ func BenchmarkParseRes(b *testing.B) {
 
 // Generate AGI environment data
 func genEnv() []byte {
-	var agiData []byte
+	agiData := make([]byte, 0, 512)
 	agiData = append(agiData, "agi_network: yes\n"...)
 	agiData = append(agiData, "agi_network_script: foo?\n"...)
 	agiData = append(agiData, "agi_request: agi://127.0.0.1/foo?\n"...)
@@ -200,7 +200,7 @@ func genEnv() []byte {
 
 // Generate AGI Responses
 func genRes() []byte {
-	var res []byte
+	res := make([]byte,0, 256)
 	res = append(res, "200 result=1\n"...)
 	res = append(res, "200 result=1 (speech) endpos=1234 results=foo bar\n"...)
 	res = append(res, "510 Invalid or unknown command\n"...)

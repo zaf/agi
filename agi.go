@@ -426,7 +426,7 @@ func (a *Session) sendMsg(s string) error {
 // parseEnv reads and stores AGI environment.
 func (a *Session) parseEnv() error {
 	var err error
-	a.Env = make(map[string]string)
+	a.Env = make(map[string]string, 22)
 	for i := 0; i <= envMax; i++ {
 		line, err := a.Buf.ReadString('\n')
 		if err != nil || line == "\n" {
