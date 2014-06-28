@@ -8,8 +8,9 @@
 package main
 
 import (
-	"github.com/zaf/agi"
 	"log"
+
+	"github.com/zaf/agi"
 )
 
 const debug = false

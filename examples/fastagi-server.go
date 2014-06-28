@@ -14,7 +14,6 @@ package main
 import (
 	"bufio"
 	"flag"
-	"github.com/zaf/agi"
 	"log"
 	"net"
 	"net/url"
@@ -23,6 +22,8 @@ import (
 	"runtime"
 	"sync"
 	"sync/atomic"
+
+	"github.com/zaf/agi"
 )
 
 var (

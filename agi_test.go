@@ -200,7 +200,7 @@ func genEnv() []byte {
 
 // Generate AGI Responses
 func genRes() []byte {
-	res := make([]byte,0, 256)
+	res := make([]byte, 0, 256)
 	res = append(res, "200 result=1\n"...)
 	res = append(res, "200 result=1 (speech) endpos=1234 results=foo bar\n"...)
 	res = append(res, "510 Invalid or unknown command\n"...)

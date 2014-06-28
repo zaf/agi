@@ -9,9 +9,10 @@ package main
 
 import (
 	"bufio"
-	"github.com/zaf/agi"
 	"log"
 	"net"
+
+	"github.com/zaf/agi"
 )
 
 func main() {

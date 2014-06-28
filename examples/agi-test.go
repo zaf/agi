@@ -15,9 +15,10 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/zaf/agi"
 	"log"
 	"net"
+
+	"github.com/zaf/agi"
 )
 
 var listen = flag.Bool("spawn_fagi", false, "Spawn as a FastAGI server")
