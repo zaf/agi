@@ -108,7 +108,7 @@ func testAgi(sess *agi.Session) {
 
 	sess.Verbose("Testing databaseget...")
 	r, err = sess.DatabaseGet("test", "my_key")
-	if err != nil || r.Res != 1 {
+	if err != nil || r.Res != 1 || r.Dat != "true" {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -186,7 +186,7 @@ func testAgi(sess *agi.Session) {
 	}
 	tests++
 
-	sess.Verbose("Testing redord...")
+	sess.Verbose("Testing record...")
 	r, err = sess.RecordFile("/tmp/testagi", "alaw", "1234567890*#", 3000)
 	if err != nil || r.Res == -1 {
 		sess.Verbose("Failed.")
