@@ -24,7 +24,7 @@ func (c *writeConn) Write(p []byte) (int, error) {
 // Test AGI environment parsing
 func TestAgiEnv(t *testing.T) {
 	var a Session
-	a.Buf = bufio.NewReadWriter(
+	a.buf = bufio.NewReadWriter(
 		bufio.NewReader(bytes.NewReader(genEnv())),
 		nil,
 	)
@@ -50,54 +50,54 @@ func TestAgiEnv(t *testing.T) {
 func TestRes(t *testing.T) {
 	var a Session
 	data := genRes()
-	a.Buf = bufio.NewReadWriter(
+	a.buf = bufio.NewReadWriter(
 		bufio.NewReader(bytes.NewReader(data)),
 		nil,
 	)
-	err := a.parseResponse()
+	r, err := a.parseResponse()
 	if err != nil {
 		t.Error("Error parsing AGI 200 response.")
 	}
-	if len(a.Res) > 1 {
+	if r.Dat != "" {
 		t.Error("Error parsing AGI 200 response.")
 	}
-	if a.Res[0] != "1" {
+	if r.Res != 1 {
 		t.Error("Error parsing AGI 200 response.")
 	}
-	err = a.parseResponse()
-	if len(a.Res) != 2 {
+	r, err = a.parseResponse()
+	if r.Dat != "(speech) endpos=1234 results=foo bar" {
 		t.Error("Error parsing AGI complex 200 response.")
 	}
 
-	err = a.parseResponse()
+	_, err = a.parseResponse()
 	if err == nil {
 		t.Error("No error after parsing AGI 510 response.")
 	}
-	err = a.parseResponse()
+	_, err = a.parseResponse()
 	if err == nil {
 		t.Error("No error after parsing AGI 511 response.")
 	}
-	err = a.parseResponse()
+	_, err = a.parseResponse()
 	if err == nil {
 		t.Error("No error after parsing AGI 520 response.")
 	}
-	err = a.parseResponse()
+	_, err = a.parseResponse()
 	if err == nil {
 		t.Error("No error after parsing AGI 520 response containing usage details.")
 	}
-	err = a.parseResponse()
+	_, err = a.parseResponse()
 	if err == nil {
 		t.Error("No error after parsing a partial AGI response.")
 	}
-	err = a.parseResponse()
+	_, err = a.parseResponse()
 	if err == nil {
 		t.Error("No error after parsing an empty AGI response.")
 	}
-	err = a.parseResponse()
+	_, err = a.parseResponse()
 	if err == nil {
 		t.Error("No error after parsing an empty AGI response.")
 	}
-	err = a.parseResponse()
+	_, err = a.parseResponse()
 	if err == nil {
 		t.Error("No error after parsing an erroneous AGI response.")
 	}
@@ -105,6 +105,7 @@ func TestRes(t *testing.T) {
 
 // Test the generation of AGI commands
 func TestCmd(t *testing.T) {
+	var r Reply
 	wc := new(writeConn)
 	data := genEnv()
 	data = append(data, "200 result=1 endpos=1234\n"...)
@@ -118,7 +119,7 @@ func TestCmd(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to initialize new AGI session")
 	}
-	err = a.GetOption("echo", "any")
+	r, err = a.GetOption("echo", "any")
 	if err != nil {
 		t.Error("Failed to parse AGI responce")
 	}
@@ -128,13 +129,10 @@ func TestCmd(t *testing.T) {
 	if string(wc.buf) != "GET OPTION echo \"any\"\n" {
 		t.Error("Failed to sent properly formatted AGI command")
 	}
-	if len(a.Res) < 2 {
-		t.Error("Failed to store the full response")
-	}
-	if a.Res[0] != "1" {
+	if r.Res != 1 {
 		t.Error("Failed to get the right numeric result")
 	}
-	if a.Res[1] != "1234" {
+	if r.Dat != "1234" {
 		t.Error("Failed to properly parse the rest of the response")
 	}
 }
@@ -157,7 +155,7 @@ func BenchmarkParseRes(b *testing.B) {
 	var a Session
 	data := genRes()
 	for i := 0; i < b.N; i++ {
-		a.Buf = bufio.NewReadWriter(
+		a.buf = bufio.NewReadWriter(
 			bufio.NewReader(bytes.NewReader(data)),
 			nil,
 		)

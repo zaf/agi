@@ -12,6 +12,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -20,11 +21,16 @@ const (
 	envMax = 150 // Maximum number of AGI environment args
 )
 
-// Session is a struct holding AGI environment vars, responses and the I/O handlers.
+// Session is a struct holding AGI environment vars and the I/O handlers.
 type Session struct {
 	Env map[string]string //AGI environment variables.
-	Res []string          //Result of each AGI command.
-	Buf *bufio.ReadWriter //AGI I/O buffer.
+	buf *bufio.ReadWriter //AGI I/O buffer.
+}
+
+// Reply is a struct that holds the return values of each AGI command.
+type Reply struct {
+	Res int    //Numeric result of the AGI command.
+	Dat string //Additional returned data.
 }
 
 // Init initializes a new AGI session. If rw is nil the AGI session will use standard input (stdin)
@@ -32,25 +38,25 @@ type Session struct {
 func Init(rw *bufio.ReadWriter) (*Session, error) {
 	a := new(Session)
 	if rw == nil {
-		a.Buf = bufio.NewReadWriter(bufio.NewReader(os.Stdin), bufio.NewWriter(os.Stdout))
+		a.buf = bufio.NewReadWriter(bufio.NewReader(os.Stdin), bufio.NewWriter(os.Stdout))
 	} else {
-		a.Buf = rw
+		a.buf = rw
 	}
 	err := a.parseEnv()
 	return a, err
 }
 
-// Answer answers channel. Result is -1 on channel failure, or 0 if successful.
-func (a *Session) Answer() error {
+// Answer answers channel. Res is -1 on channel failure, or 0 if successful.
+func (a *Session) Answer() (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("ANSWER"))
 }
 
-// AsyncagiBreak interrupts Async AGI. Result is always 0.
-func (a *Session) AsyncagiBreak() error {
+// AsyncagiBreak interrupts Async AGI. Res is always 0.
+func (a *Session) AsyncagiBreak() (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("ASYNCAGI BREAK"))
 }
 
-//ChannelStatus result contains the status of the given channel, if no channel specified
+//ChannelStatus Res contains the status of the given channel, if no channel specified
 // checks the current channel.
 // Result values:
 //     0 - Channel is down and available.
@@ -61,7 +67,7 @@ func (a *Session) AsyncagiBreak() error {
 //     5 - Remote end is ringing.
 //     6 - Line is up.
 //     7 - Line is busy.
-func (a *Session) ChannelStatus(channel ...string) error {
+func (a *Session) ChannelStatus(channel ...string) (Reply, error) {
 	if len(channel) > 0 {
 		return a.sendMsg(fmt.Sprintf("CHANNEL STATUS %s", channel[0]))
 	}
@@ -70,9 +76,9 @@ func (a *Session) ChannelStatus(channel ...string) error {
 
 // ControlStreamFile sends audio file on channel and allows the listener to control the stream.
 // Optional parameters: skipms, ffchar - Defaults to *, rewchr - Defaults to #, pausechr.
-// Result is 0 if playback completes without a digit being pressed, or the ASCII numerical value
+// Res is 0 if playback completes without a digit being pressed, or the ASCII numerical value
 // of the digit if one was pressed, or -1 on error or if the channel was disconnected.
-func (a *Session) ControlStreamFile(file, escape string, params ...interface{}) error {
+func (a *Session) ControlStreamFile(file, escape string, params ...interface{}) (Reply, error) {
 	cmd := fmt.Sprintf("%s \"%s\"", file, escape)
 	for _, par := range params {
 		cmd = fmt.Sprintf("%s %v", cmd, par)
@@ -80,43 +86,43 @@ func (a *Session) ControlStreamFile(file, escape string, params ...interface{}) 
 	return a.sendMsg(fmt.Sprintf("CONTROL STREAM FILE %s", cmd))
 }
 
-// DatabaseDel removes database key/value. Result is 1 if successful, 0 otherwise.
-func (a *Session) DatabaseDel(family, key string) error {
+// DatabaseDel removes database key/value. Res is 1 if successful, 0 otherwise.
+func (a *Session) DatabaseDel(family, key string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("DATABASE DEL %s %s", family, key))
 }
 
-// DatabaseDelTree removes database keytree/value. Result is 1 if successful, 0 otherwise.
-func (a *Session) DatabaseDelTree(family string, keytree ...string) error {
+// DatabaseDelTree removes database keytree/value. Res is 1 if successful, 0 otherwise.
+func (a *Session) DatabaseDelTree(family string, keytree ...string) (Reply, error) {
 	if len(keytree) > 0 {
 		return a.sendMsg(fmt.Sprintf("DATABASE DELTREE %s %s", family, keytree[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("DATABASE DELTREE %s", family))
 }
 
-// DatabaseGet gets database value. Result is 0 if key is not set, 1 if key is set
-// and contains the variable in Res[1].
-func (a *Session) DatabaseGet(family, key string) error {
-	err := a.sendMsg(fmt.Sprintf("DATABASE GET %s %s", family, key))
-	if len(a.Res) > 1 {
-		a.Res[1] = stripPar(a.Res[1])
+// DatabaseGet gets database value. Res is 0 if key is not set, 1 if key is set
+// and the value is returned in Dat.
+func (a *Session) DatabaseGet(family, key string) (Reply, error) {
+	r, err := a.sendMsg(fmt.Sprintf("DATABASE GET %s %s", family, key))
+	if r.Dat != "" {
+		r.Dat = strings.Trim(r.Dat, "()")
 	}
-	return err
+	return r, err
 }
 
-// DatabasePut adds/updates database value. Result is 1 if successful, 0 otherwise.
-func (a *Session) DatabasePut(family, key, value string) error {
+// DatabasePut adds/updates database value. Res is 1 if successful, 0 otherwise.
+func (a *Session) DatabasePut(family, key, value string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("DATABASE PUT %s %s %s", family, key, value))
 }
 
-// Exec executes a given Application. Result contains whatever the application returns,
-// or -2 on failure to find application.
-func (a *Session) Exec(app, options string) error {
+// Exec executes a given application. Res contains whatever the dialplan application returns,
+// or -2 on failure to find the application.
+func (a *Session) Exec(app, options string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("EXEC %s %s", app, options))
 }
 
 // GetData prompts for DTMF on a channel. Optional parameters: timeout, maxdigits.
-// Result contains the digits received from the channel at the other end.
-func (a *Session) GetData(file string, params ...int) error {
+// Res contains the digits received from the channel at the other end.
+func (a *Session) GetData(file string, params ...int) (Reply, error) {
 	cmd := file
 	for _, par := range params {
 		cmd = fmt.Sprintf("%s %d", cmd, par)
@@ -125,63 +131,65 @@ func (a *Session) GetData(file string, params ...int) error {
 }
 
 // GetFullVariable evaluates a channel expression, if no channel is specified the current channel is used.
-// Result is 1 if variablename is set and contains the variable in Res[1].
+// Res is 1 if variablename is set and the value is returned in Dat.
 // Understands complex variable names and builtin variables.
-func (a *Session) GetFullVariable(variable string, channel ...string) error {
+func (a *Session) GetFullVariable(variable string, channel ...string) (Reply, error) {
+	var r Reply
 	var err error
 	if len(channel) > 0 {
-		err = a.sendMsg(fmt.Sprintf("GET FULL VARIABLE %s %s", variable, channel[0]))
+		r, err = a.sendMsg(fmt.Sprintf("GET FULL VARIABLE %s %s", variable, channel[0]))
 	} else {
-		err = a.sendMsg(fmt.Sprintf("GET FULL VARIABLE %s", variable))
+		r, err = a.sendMsg(fmt.Sprintf("GET FULL VARIABLE %s", variable))
 	}
-	if len(a.Res) > 1 {
-		a.Res[1] = stripPar(a.Res[1])
+	if r.Dat != "" {
+		r.Dat = strings.Trim(r.Dat, "()")
 	}
-	return err
+	return r, err
 }
 
 // GetOption streams file, prompts for DTMF with timeout. Optiona parameter: timeout.
-// Result contains the digits received from the channel at the other end and the sample ofset.
-// In case of failure to playback the result is -1.
-func (a *Session) GetOption(filename, escape string, timeout ...int) error {
+// Res contains the digits received from the channel at the other end and Dat
+// contains the sample ofset. In case of failure to playback Res is -1.
+func (a *Session) GetOption(filename, escape string, timeout ...int) (Reply, error) {
+	var r Reply
 	var err error
 	if len(timeout) > 0 {
-		err = a.sendMsg(fmt.Sprintf("GET OPTION %s \"%s\" %d", filename, escape, timeout[0]))
+		r, err = a.sendMsg(fmt.Sprintf("GET OPTION %s \"%s\" %d", filename, escape, timeout[0]))
 	} else {
-		err = a.sendMsg(fmt.Sprintf("GET OPTION %s \"%s\"", filename, escape))
+		r, err = a.sendMsg(fmt.Sprintf("GET OPTION %s \"%s\"", filename, escape))
 	}
-	if len(a.Res) > 1 {
-		a.Res[1] = strings.TrimPrefix(a.Res[1], "endpos=")
+	if r.Dat != "" {
+		r.Dat = strings.TrimPrefix(r.Dat, "endpos=")
 	}
-	return err
+	return r, err
 }
 
-// GetVariable gets a channel variable. Result is 0 if variablename is not set,
-// 1 if variablename is set and contains the variable in Res[1].
-func (a *Session) GetVariable(variable string) error {
-	err := a.sendMsg(fmt.Sprintf("GET VARIABLE %s", variable))
-	if len(a.Res) > 1 {
-		a.Res[1] = stripPar(a.Res[1])
+// GetVariable gets a channel variable. Res is 0 if variablename is not set,
+// 1 if variablename is set and Dat contains the value.
+func (a *Session) GetVariable(variable string) (Reply, error) {
+	r, err := a.sendMsg(fmt.Sprintf("GET VARIABLE %s", variable))
+	if r.Dat != "" {
+		r.Dat = strings.Trim(r.Dat, "()")
 	}
-	return err
+	return r, err
 }
 
 // GoSub causes the channel to execute the specified dialplan subroutine, returning to the dialplan
 // with execution of a Return().
-func (a *Session) GoSub(context, extension, priority, args string) error {
+func (a *Session) GoSub(context, extension, priority, args string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("GOSUB %s %s %s %s", context, extension, priority, args))
 }
 
-// Hangup hangs up a channel, Result is 1 on success, -1 if the given channel was not found.
-func (a *Session) Hangup(channel ...string) error {
+// Hangup hangs up a channel, Res is 1 on success, -1 if the given channel was not found.
+func (a *Session) Hangup(channel ...string) (Reply, error) {
 	if len(channel) > 0 {
 		return a.sendMsg(fmt.Sprintf("HANGUP %s", channel[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("HANGUP"))
 }
 
-// Noop does nothing. Result is always 0.
-func (a *Session) Noop(params ...interface{}) error {
+// Noop does nothing. Res is always 0.
+func (a *Session) Noop(params ...interface{}) (Reply, error) {
 	var cmd string
 	for _, par := range params {
 		cmd = fmt.Sprintf("%s %v", cmd, par)
@@ -189,21 +197,21 @@ func (a *Session) Noop(params ...interface{}) error {
 	return a.sendMsg(fmt.Sprintf("NOOP%s", cmd))
 }
 
-// ReceiveChar receives one character from channels supporting it. Result contains the decimal value of
+// ReceiveChar receives one character from channels supporting it. Res contains the decimal value of
 // the character if one is received, or 0 if the channel does not support text reception.
 // Result is -1 only on error/hangup.
-func (a *Session) ReceiveChar(timeout int) error {
+func (a *Session) ReceiveChar(timeout int) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("RECEIVE CHAR %d", timeout))
 }
 
-// ReceiveText receives text from channels supporting it. Result is -1 for failure
-// or 1 for success, and conatins the string in Res[1].
-func (a *Session) ReceiveText(timeout int) error {
-	err := a.sendMsg(fmt.Sprintf("RECEIVE TEXT %d", timeout))
-	if len(a.Res) > 1 {
-		a.Res[1] = stripPar(a.Res[1])
+// ReceiveText receives text from channels supporting it. Res is -1 for failure
+// or 1 for success, and Dat conatins the string.
+func (a *Session) ReceiveText(timeout int) (Reply, error) {
+	r, err := a.sendMsg(fmt.Sprintf("RECEIVE TEXT %d", timeout))
+	if r.Dat != "" {
+		r.Dat = strings.Trim(r.Dat, "()")
 	}
-	return err
+	return r, err
 }
 
 // RecordFile records to a given file. The format will specify what kind of file will be recorded.
@@ -211,11 +219,11 @@ func (a *Session) ReceiveText(timeout int) error {
 // Optional parameters: offset samples if provided will seek to the offset without exceeding
 // the end of the file. Silence (always prefixed with s=)is the number of seconds of silence allowed
 // before the function returns despite the lack of DTMF digits or reaching timeout.
-// Negative values of Res[0] mean error. Res[0] equals 0 if recording was successful without any DTMF
+// Negative values of Res mean error. Res equals 0 if recording was successful without any DTMF
 // digit received, or the ASCII numerical value of the digit if one was received.
-// Rest of the result is a set of different inconsistent values depending
-// on each case, please refer to res_agi.c in asterisk source code for further info.
-func (a *Session) RecordFile(file, format, escape string, timeout int, params ...interface{}) error {
+// Dat contains a set of different inconsistent return values depending on each case,
+// please refer to res_agi.c in asterisk source code for further info.
+func (a *Session) RecordFile(file, format, escape string, timeout int, params ...interface{}) (Reply, error) {
 	cmd := fmt.Sprintf("%s %s \"%s\" %d", file, format, escape, timeout)
 	for _, par := range params {
 		cmd = fmt.Sprintf("%s %v", cmd, par)
@@ -223,24 +231,24 @@ func (a *Session) RecordFile(file, format, escape string, timeout int, params ..
 	return a.sendMsg(fmt.Sprintf("RECORD FILE %s", cmd))
 }
 
-// SayAlpha says a given character string. Result is 0 if playback completes without a digit
+// SayAlpha says a given character string. Res is 0 if playback completes without a digit
 // being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hangup.
-func (a *Session) SayAlpha(str, escape string) error {
+func (a *Session) SayAlpha(str, escape string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SAY ALPHA %s \"%s\"", str, escape))
 }
 
-// SayDate says a given date (Unix time format). Result is 0 if playback completes without a digit
+// SayDate says a given date (Unix time format). Res is 0 if playback completes without a digit
 // being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hangup.
-func (a *Session) SayDate(date int64, escape string) error {
+func (a *Session) SayDate(date int64, escape string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SAY DATE %d \"%s\"", date, escape))
 }
 
 // SayDateTime says a given time (Unix time format). Optional parameters:
 // fomrat, the format the time should be said in. See voicemail.conf (defaults to ABdY 'digits/at' IMp).
 // timezone, acceptable values can be found in /usr/share/zoneinfo. Defaults to machine default.
-// Result is 0 if playback completes without a digit being pressed, the ASCII numerical
+// Res is 0 if playback completes without a digit being pressed, the ASCII numerical
 // value of the digit if one was pressed or -1 on error/hangup.
-func (a *Session) SayDateTime(time int64, escape string, params ...string) error {
+func (a *Session) SayDateTime(time int64, escape string, params ...string) (Reply, error) {
 	cmd := fmt.Sprintf("%d \"%s\"", time, escape)
 	for _, par := range params {
 		cmd = fmt.Sprintf("%s %v", cmd, par)
@@ -248,70 +256,70 @@ func (a *Session) SayDateTime(time int64, escape string, params ...string) error
 	return a.sendMsg(fmt.Sprintf("SAY DATETIME %s", cmd))
 }
 
-// SayDigits says a given digit. Result is 0 if playback completes without a digit being pressed,
+// SayDigits says a given digit. Res is 0 if playback completes without a digit being pressed,
 // the ASCII numerical value of the digit if one was pressed or -1 on error/hangup.
-func (a *Session) SayDigits(digit int, escape string) error {
+func (a *Session) SayDigits(digit int, escape string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SAY DIGITS %d \"%s\"", digit, escape))
 }
 
-// SayNumber says a given number. Optional parameter gender. Result is 0 if playback completes
+// SayNumber says a given number. Optional parameter gender. Res is 0 if playback completes
 // without a digit being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hangup.
-func (a *Session) SayNumber(num int, escape string, gender ...string) error {
+func (a *Session) SayNumber(num int, escape string, gender ...string) (Reply, error) {
 	if len(gender) > 0 {
 		return a.sendMsg(fmt.Sprintf("SAY NUMBER %d \"%s\" %s", num, escape, gender[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("SAY NUMBER %d \"%s\"", num, escape))
 }
 
-// SayPhonetic says a given character string with phonetics. Result is 0 if playback completes
+// SayPhonetic says a given character string with phonetics. Res is 0 if playback completes
 // without a digit pressed, the ASCII numerical value of the digit if one was pressed, or -1 on error/hangup
-func (a *Session) SayPhonetic(str, escape string) error {
+func (a *Session) SayPhonetic(str, escape string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SAY PHONETIC %s \"%s\"", str, escape))
 }
 
-// SayTime says a given time (Unix time format). Result is 0 if playback completes without a digit
+// SayTime says a given time (Unix time format). Res is 0 if playback completes without a digit
 // being pressed, or the ASCII numerical value of the digit if one was pressed or -1 on error/hangup.
-func (a *Session) SayTime(time int64, escape string) error {
+func (a *Session) SayTime(time int64, escape string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SAY TIME %d \"%s\"", time, escape))
 }
 
-// SendImage sends images to channels supporting it. Result is 0 if image is sent, or if the channel
+// SendImage sends images to channels supporting it. Res is 0 if image is sent, or if the channel
 // does not support image transmission. Result is -1 only on error/hangup. Image names should not include extensions.
-func (a *Session) SendImage(image string) error {
+func (a *Session) SendImage(image string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SEND IMAGE %s", image))
 }
 
-// SendText sends text to channels supporting it. Result is 0 if text is sent, or if the channel
+// SendText sends text to channels supporting it. Res is 0 if text is sent, or if the channel
 // does not support text transmission. Result is -1 only on error/hangup.
-func (a *Session) SendText(text string) error {
+func (a *Session) SendText(text string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SEND TEXT \"%s\"", text))
 }
 
 // SetAutohangup autohangups channel after a number of seconds. Setting time to 0 will cause the autohangup
-// feature to be disabled on this channel. Result is always 0.
-func (a *Session) SetAutohangup(time int) error {
+// feature to be disabled on this channel. Res is always 0.
+func (a *Session) SetAutohangup(time int) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SET AUTOHANGUP %d", time))
 }
 
-// SetCallerid sets callerid for the current channel. Result is always 1.
-func (a *Session) SetCallerid(cid string) error {
+// SetCallerid sets callerid for the current channel. Res is always 1.
+func (a *Session) SetCallerid(cid string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SET CALLERID %s", cid))
 }
 
-// SetContext sets channel context. Result is always 0.
-func (a *Session) SetContext(context string) error {
+// SetContext sets channel context. Res is always 0.
+func (a *Session) SetContext(context string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SET CONTEXT %s", context))
 }
 
-// SetExtension changes channel extension. Result is always 0.
-func (a *Session) SetExtension(ext string) error {
+// SetExtension changes channel extension. Res is always 0.
+func (a *Session) SetExtension(ext string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SET EXTENSION %s", ext))
 }
 
 // SetMusic enables/disables Music on hold generator by settong opt to "on" or "off".
 // Optional parameter: class, if not specified, then the default music on hold class will be used.
-// Result is always 0.
-func (a *Session) SetMusic(opt string, class ...string) error {
+// Res is always 0.
+func (a *Session) SetMusic(opt string, class ...string) (Reply, error) {
 	if len(class) > 0 {
 		return a.sendMsg(fmt.Sprintf("SET MUSIC %s %s", opt, class[0]))
 	}
@@ -319,84 +327,85 @@ func (a *Session) SetMusic(opt string, class ...string) error {
 }
 
 // SetPriority sets channel dialplan priority. The priority must be a valid priority or label.
-// Result is always 0.
-func (a *Session) SetPriority(priority string) error {
+// Res is always 0.
+func (a *Session) SetPriority(priority string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SET PRIORITY %s", priority))
 }
 
-// SetVariable sets a channel variable. Result is always 1.
-func (a *Session) SetVariable(variable string, value interface{}) error {
+// SetVariable sets a channel variable. Res is always 1.
+func (a *Session) SetVariable(variable string, value interface{}) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SET VARIABLE \"%s\" \"%v\"", variable, value))
 }
 
-// SpeechActivateGrammar activates a grammar. Result is 1 on success 0 on error.
-func (a *Session) SpeechActivateGrammar(grammar string) error {
+// SpeechActivateGrammar activates a grammar. Res is 1 on success 0 on error.
+func (a *Session) SpeechActivateGrammar(grammar string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SPEECH ACTIVATE GRAMMAR %s", grammar))
 }
 
-// SpeechCreate creates a speech object. Result is 1 on success 0 on error.
-func (a *Session) SpeechCreate(engine string) error {
+// SpeechCreate creates a speech object. Res is 1 on success 0 on error.
+func (a *Session) SpeechCreate(engine string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SPEECH CREATE %s", engine))
 }
 
-// SpeechDeactivateGrammar deactivates a grammar. Result is 1 on success 0 on error.
-func (a *Session) SpeechDeactivateGrammar(grammar string) error {
+// SpeechDeactivateGrammar deactivates a grammar. Res is 1 on success 0 on error.
+func (a *Session) SpeechDeactivateGrammar(grammar string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SPEECH DEACTIVATE GRAMMAR %s", grammar))
 }
 
-// SpeechDestroy destroys a speech object. Result is 1 on success 0 on error.
-func (a *Session) SpeechDestroy() error {
+// SpeechDestroy destroys a speech object. Res is 1 on success 0 on error.
+func (a *Session) SpeechDestroy() (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SPEECH DESTROY"))
 }
 
-// SpeechLoadGrammar loads a grammar. Result is 1 on success 0 on error.
-func (a *Session) SpeechLoadGrammar(grammar, path string) error {
+// SpeechLoadGrammar loads a grammar. Res is 1 on success 0 on error.
+func (a *Session) SpeechLoadGrammar(grammar, path string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SPEECH LOAD GRAMMAR %s %s", grammar, path))
 }
 
-// SpeechRecognize recognizes speech. Res[0] is 1 onsuccess, 0 in case of error
-// In case of success the rest of the result contains a set of different inconsistent values.
+// SpeechRecognize recognizes speech. Res is 1 onsuccess, 0 in case of error
+// In case of success Dat contains a set of different inconsistent values.
 // Please refer to res_agi.c in asterisk source code for further info.
-func (a *Session) SpeechRecognize(prompt, timeout, offset string) error {
+func (a *Session) SpeechRecognize(prompt, timeout, offset string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SPEECH RECOGNIZE %s %s %s", prompt, timeout, offset))
 }
 
-// SpeechSet sets a speech engine setting. Result is 1 on success 0 on error.
-func (a *Session) SpeechSet(name, value string) error {
+// SpeechSet sets a speech engine setting. Res is 1 on success 0 on error.
+func (a *Session) SpeechSet(name, value string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SPEECH SET %s %s", name, value))
 }
 
 // SpeechUnloadGrammar unloads a grammar. Result is 1 on success 0 on error.
-func (a *Session) SpeechUnloadGrammar(grammar string) error {
+func (a *Session) SpeechUnloadGrammar(grammar string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SPEECH UNLOAD GRAMMAR %s", grammar))
 }
 
 // StreamFile sends audio file on channel. Optional parameter: sample offset for the playback start position.
-// Result is 0 if playback completes without a digit being pressed, the ASCII numerical value
+// Res is 0 if playback completes without a digit being pressed, the ASCII numerical value
 // of the digit if one was pressed, or -1 on error or if the channel was disconnected.
 // If musiconhold is playing before calling stream file it will be automatically stopped
 // and will not be restarted after completion.
-func (a *Session) StreamFile(file, escape string, offset ...int) error {
+func (a *Session) StreamFile(file, escape string, offset ...int) (Reply, error) {
+	var r Reply
 	var err error
 	if len(offset) > 0 {
-		err = a.sendMsg(fmt.Sprintf("STREAM FILE %s \"%s\" %d", file, escape, offset[0]))
+		r, err = a.sendMsg(fmt.Sprintf("STREAM FILE %s \"%s\" %d", file, escape, offset[0]))
 	} else {
-		err = a.sendMsg(fmt.Sprintf("STREAM FILE %s \"%s\"", file, escape))
+		r, err = a.sendMsg(fmt.Sprintf("STREAM FILE %s \"%s\"", file, escape))
 	}
-	if len(a.Res) > 1 {
-		a.Res[1] = strings.TrimPrefix(a.Res[1], "endpos=")
+	if r.Dat != "" {
+		r.Dat = strings.TrimPrefix(r.Dat, "endpos=")
 	}
-	return err
+	return r, err
 }
 
-// TddMode toggles TDD mode (for the deaf). Result is 1 if successful, or 0 if channel is not TDD-capable.
-func (a *Session) TddMode(mode string) error {
+// TddMode toggles TDD mode (for the deaf). Res is 1 if successful, or 0 if channel is not TDD-capable.
+func (a *Session) TddMode(mode string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("TDD MODE %s", mode))
 }
 
 // Verbose logs a message to the asterisk verbose log.
-// Optional variable: level, the verbose level (1-4). Result is always 1.
-func (a *Session) Verbose(msg string, level ...int) error {
+// Optional variable: level, the verbose level (1-4). Res is always 1.
+func (a *Session) Verbose(msg string, level ...int) (Reply, error) {
 	if len(level) > 0 {
 		return a.sendMsg(fmt.Sprintf("VERBOSE \"%s\" %d", msg, level[0]))
 	}
@@ -404,23 +413,10 @@ func (a *Session) Verbose(msg string, level ...int) error {
 }
 
 // WaitForDigit waits for a digit to be pressed. Use -1 for the timeout value if you desire
-// the call to block indefinitely. Result is -1 on channel failure, 0 if no digit is received
+// the call to block indefinitely. Res is -1 on channel failure, 0 if no digit is received
 // in the timeout, or the ASCII numerical value of the digit if one is received.
-func (a *Session) WaitForDigit(timeout int) error {
+func (a *Session) WaitForDigit(timeout int) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("WAIT FOR DIGIT %d", timeout))
-}
-
-// Destroy clears an AGI session to help GC.
-func (a *Session) Destroy() {
-	a = nil
-}
-
-// sendMsg sends an AGI command and returns the result
-func (a *Session) sendMsg(s string) error {
-	s = strings.TrimSpace(s)
-	fmt.Fprintln(a.Buf, s)
-	a.Buf.Flush()
-	return a.parseResponse()
 }
 
 // parseEnv reads and stores AGI environment.
@@ -428,7 +424,7 @@ func (a *Session) parseEnv() error {
 	var err error
 	a.Env = make(map[string]string, 22)
 	for i := 0; i <= envMax; i++ {
-		line, err := a.Buf.ReadString('\n')
+		line, err := a.buf.ReadString('\n')
 		if err != nil || line == "\n" {
 			break
 		}
@@ -450,24 +446,34 @@ func (a *Session) parseEnv() error {
 	return err
 }
 
-// parseResponse reads back and parses AGI repsonse. Returns the protocol error, if any, and the
-// AGI response.
-func (a *Session) parseResponse() error {
+// sendMsg sends an AGI command and returns the result
+func (a *Session) sendMsg(s string) (Reply, error) {
+	s = strings.TrimSpace(s)
+	fmt.Fprintln(a.buf, s)
+	a.buf.Flush()
+	return a.parseResponse()
+}
+
+// parseResponse reads back and parses AGI repsonse. Returns the Reply and the protocol error, if any.
+func (a *Session) parseResponse() (Reply, error) {
+	r := Reply{-99, ""} //Set default result value to -99 for people that wont bother doing proper error checking.
 	var err error
-	a.Res = nil
-	line, _ := a.Buf.ReadString('\n')
+	line, _ := a.buf.ReadString('\n')
 	line = strings.TrimRight(line, "\n")
-	reply := strings.SplitN(line, " ", 3)
-	if len(reply) < 2 {
-		if reply[0] == "HANGUP" {
-			return fmt.Errorf("client sent a HANGUP request")
+	tkns := strings.SplitN(line, " ", 3)
+	if len(tkns) < 2 {
+		if tkns[0] == "HANGUP" {
+			return r, fmt.Errorf("client sent a HANGUP request")
 		}
-		return fmt.Errorf("erroneous or partial agi response: %v", reply)
+		return r, fmt.Errorf("erroneous or partial agi response: %v", tkns)
 	}
-	switch reply[0] {
+	switch tkns[0] {
 	case "200":
-		a.Res = reply[1:]
-		a.Res[0] = strings.TrimPrefix(a.Res[0], "result=")
+		res := (strings.TrimPrefix(tkns[1], "result="))
+		r.Res, _ = strconv.Atoi(res)
+		if len(tkns) == 3 {
+			r.Dat = tkns[2]
+		}
 	case "510":
 		err = fmt.Errorf("invalid or unknown command")
 	case "511":
@@ -476,16 +482,14 @@ func (a *Session) parseResponse() error {
 		err = fmt.Errorf("invalid command syntax")
 	case "520-Invalid":
 		err = fmt.Errorf("invalid command syntax")
-		a.Buf.ReadString('\n')
+		a.buf.ReadString('\n')
 	default:
-		err = fmt.Errorf("erroneous agi response: %v", reply)
+		err = fmt.Errorf("erroneous agi response: %v", tkns)
 	}
-	return err
+	return r, err
 }
 
-// stripPar removes leading and trailing parentheses.
-func stripPar(s string) string {
-	s = strings.TrimLeft(s, "(")
-	s = strings.TrimRight(s, ")")
-	return s
+// Destroy clears an AGI session to help GC.
+func (a *Session) Destroy() {
+	a = nil
 }
