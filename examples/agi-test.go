@@ -73,10 +73,12 @@ func spawnAgi(c net.Conn) {
 func testAgi(sess *agi.Session) {
 	//Perform some tests
 	var tests, pass, fail int
+	var err error
+	var r agi.Reply
 
 	sess.Verbose("Testing answer...")
-	sess.Answer()
-	if sess.Res == nil || sess.Res[0] != "0" {
+	r, err = sess.Answer()
+	if err != nil || r.Res != 0 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -85,8 +87,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing channelstatus...")
-	sess.ChannelStatus()
-	if sess.Res == nil || sess.Res[0] != "6" {
+	r, err = sess.ChannelStatus()
+	if err != nil || r.Res != 6 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -95,8 +97,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing databaseput...")
-	sess.DatabasePut("test", "my_key", "true")
-	if sess.Res == nil || sess.Res[0] != "1" {
+	r, err = sess.DatabasePut("test", "my_key", "true")
+	if err != nil || r.Res != 1 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -105,8 +107,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing databaseget...")
-	sess.DatabaseGet("test", "my_key")
-	if sess.Res == nil || sess.Res[0] != "1" {
+	r, err = sess.DatabaseGet("test", "my_key")
+	if err != nil || r.Res != 1 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -115,8 +117,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing databasedel...")
-	sess.DatabaseDel("test", "my_key")
-	if sess.Res == nil || sess.Res[0] != "1" {
+	r, err = sess.DatabaseDel("test", "my_key")
+	if err != nil || r.Res != 1 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -125,8 +127,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing databasedeltree...")
-	sess.DatabaseDelTree("test")
-	if sess.Res == nil || sess.Res[0] != "1" {
+	r, err = sess.DatabaseDelTree("test")
+	if err != nil || r.Res != 1 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -135,8 +137,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing streamfile...")
-	sess.StreamFile("beep", "")
-	if sess.Res == nil || sess.Res[0] != "0" {
+	r, err = sess.StreamFile("beep", "")
+	if err != nil || r.Res != 0 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -145,8 +147,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing sendtext...")
-	sess.SendText("Hello World")
-	if sess.Res == nil || sess.Res[0] != "0" {
+	r, err = sess.SendText("Hello World")
+	if err != nil || r.Res != 0 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -155,8 +157,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing sendimage...")
-	sess.SendImage("asterisk-image")
-	if sess.Res == nil || sess.Res[0] != "0" {
+	r, err = sess.SendImage("asterisk-image")
+	if err != nil || r.Res != 0 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -165,8 +167,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing saynumber...")
-	sess.SayNumber(192837465, "")
-	if sess.Res == nil || sess.Res[0] != "0" {
+	r, err = sess.SayNumber(192837465, "")
+	if err != nil || r.Res != 0 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -175,8 +177,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing wait for digit...")
-	sess.WaitForDigit(3000)
-	if sess.Res == nil || sess.Res[0] == "-1" {
+	r, err = sess.WaitForDigit(3000)
+	if err != nil || r.Res == -1 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -185,8 +187,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing redord...")
-	sess.RecordFile("/tmp/testagi", "alaw", "1234567890*#", 3000)
-	if sess.Res == nil || sess.Res[0] == "-1" {
+	r, err = sess.RecordFile("/tmp/testagi", "alaw", "1234567890*#", 3000)
+	if err != nil || r.Res == -1 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -195,8 +197,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing record playback...")
-	sess.StreamFile("/tmp/testagi", "")
-	if sess.Res == nil || sess.Res[0] != "0" {
+	r, err = sess.StreamFile("/tmp/testagi", "")
+	if err != nil || r.Res != 0 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -205,8 +207,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing set variable...")
-	sess.SetVariable("testagi", "foo")
-	if sess.Res == nil || sess.Res[0] != "1" {
+	r, err = sess.SetVariable("testagi", "foo")
+	if err != nil || r.Res != 1 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -215,8 +217,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing get variable...")
-	sess.GetVariable("testagi")
-	if sess.Res == nil || sess.Res[0] != "1" || sess.Res[1] != "foo" {
+	r, err = sess.GetVariable("testagi")
+	if err != nil || r.Res != 1 || r.Dat != "foo" {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -225,8 +227,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing get full variable...")
-	sess.GetFullVariable("${testagi}")
-	if sess.Res == nil || sess.Res[0] != "1" || sess.Res[1] != "foo" {
+	r, err = sess.GetFullVariable("${testagi}")
+	if err != nil || r.Res != 1 || r.Dat != "foo" {
 		sess.Verbose("Failed.")
 		fail++
 	} else {
@@ -235,8 +237,8 @@ func testAgi(sess *agi.Session) {
 	tests++
 
 	sess.Verbose("Testing exec...")
-	sess.Exec("Wait", "3")
-	if sess.Res == nil || sess.Res[0] != "0" {
+	r, err = sess.Exec("Wait", "3")
+	if err != nil || r.Res != 0 {
 		sess.Verbose("Failed.")
 		fail++
 	} else {

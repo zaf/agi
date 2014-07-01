@@ -87,6 +87,7 @@ func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 		return
 	}
 	var file string
+	var rep agi.Reply
 	if *debug {
 		//Print AGI environment
 		log.Println("AGI environment vars:")
@@ -104,21 +105,21 @@ func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 	}
 	file = query["file"][0]
 	// Chech channel status
-	err = myAgi.ChannelStatus()
+	rep, err = myAgi.ChannelStatus()
 	if err != nil {
 		log.Printf("AGI reply error: %v\n", err)
 		return
 	}
 	//Answer channel if not already answered
-	if myAgi.Res[0] != "6" {
-		err = myAgi.Answer()
-		if err != nil || myAgi.Res[0] == "-1" {
+	if rep.Res != 6 {
+		rep, err = myAgi.Answer()
+		if err != nil || rep.Res == -1 {
 			log.Printf("Failed to answer channel: %v\n", err)
 			return
 		}
 	}
 	// Playback file
-	err = myAgi.StreamFile(file, "1234567890#*")
+	_, err = myAgi.StreamFile(file, "1234567890#*")
 	if err != nil {
 		log.Printf("Error playing back file: %v\n", err)
 	}

@@ -44,7 +44,7 @@ func connHandle(c net.Conn) {
 		return
 	}
 	//Print a message on asterisk console
-	err = myAgi.Verbose("Hello World")
+	_, err = myAgi.Verbose("Hello World")
 	if err != nil {
 		log.Printf("AGI reply error: %v\n", err)
 		return

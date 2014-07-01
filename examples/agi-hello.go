@@ -31,14 +31,14 @@ func main() {
 		}
 	}
 	//Print a message on asterisk console
-	err = myAgi.Verbose("Hello World")
+	rep, err := myAgi.Verbose("Hello World")
 	if err != nil {
 		log.Printf("AGI reply error: %v\n", err)
 		return
 	}
 	if debug {
 		//Print the response
-		log.Printf("AGI command returned: %v\n", myAgi.Res)
+		log.Printf("AGI command returned: %v\n", rep.Res)
 	}
 	//Hangup
 	myAgi.Hangup()
