@@ -3,9 +3,11 @@
 // the BSD 3-Clause License. See the LICENSE file
 // at the top of the source tree.
 
-// Package agi implements the Asterisk Gateway Interface. All methods return the AGI Protocol error on failure
-// and on success the AGI result is stored in Res slice, an element of struct Session.
-// 1st slice element holds the numeric result, 2nd element the rest of the results if there are any.
+// Package agi implements the Asterisk Gateway Interface (http://www.asterisk.org). All AGI commands are
+// implemented as methods of the Session struct that holds a copy of the AGI environment variables.
+// All methods return a Reply struct and the AGI error, if any. The Reply struct contains
+// the numeric result of the AGI command in Res and if there is any additional data it is stored
+// as string in the Dat element of the struct.
 package agi
 
 import (
