@@ -18,7 +18,6 @@ const debug = false
 func main() {
 	//Start a new AGI session
 	myAgi, err := agi.Init(nil)
-	defer myAgi.Destroy()
 	var rep agi.Reply
 	var file string
 	if err != nil {

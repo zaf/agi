@@ -488,8 +488,3 @@ func (a *Session) parseResponse() (Reply, error) {
 	}
 	return r, err
 }
-
-// Destroy clears an AGI session to help GC.
-func (a *Session) Destroy() {
-	a = nil
-}

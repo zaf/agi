@@ -79,7 +79,6 @@ func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 			log.Printf("Closing connection from %v", client.RemoteAddr())
 		}
 		client.Close()
-		myAgi.Destroy()
 		wg.Done()
 	}()
 	if err != nil {

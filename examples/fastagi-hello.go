@@ -35,10 +35,7 @@ func connHandle(c net.Conn) {
 	//Create a new AGI session
 	rw := bufio.NewReadWriter(bufio.NewReader(c), bufio.NewWriter(c))
 	myAgi, err := agi.Init(rw)
-	defer func() {
-		c.Close()
-		myAgi.Destroy()
-	}()
+	defer c.Close()
 	if err != nil {
 		log.Printf("Error Parsing AGI environment: %v\n", err)
 		return

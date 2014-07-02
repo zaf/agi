@@ -114,13 +114,6 @@ func (a *Session) DatabasePut(family, key, value string) (Reply, error)
 ```
 DatabasePut adds/updates database value. Res is 1 if successful, 0 otherwise.
 
-#### func (*Session) Destroy
-
-```go
-func (a *Session) Destroy()
-```
-Destroy clears an AGI session to help GC.
-
 #### func (*Session) Exec
 
 ```go
