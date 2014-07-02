@@ -72,8 +72,9 @@ func main() {
 
 func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 	//Create a new AGI session
+	myAgi := new(agi.Session)
 	rw := bufio.NewReadWriter(bufio.NewReader(client), bufio.NewWriter(client))
-	myAgi, err := agi.Init(rw)
+	err := myAgi.Init(rw)
 	defer func() {
 		if *debug {
 			log.Printf("Closing connection from %v", client.RemoteAddr())
@@ -118,9 +119,13 @@ func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 		}
 	}
 	// Playback file
-	_, err = myAgi.StreamFile(file, "1234567890#*")
+	rep, err = myAgi.StreamFile(file, "1234567890#*")
 	if err != nil {
-		log.Printf("Error playing back file: %v\n", err)
+		log.Printf("AGI reply error: %v\n", err)
+		return
+	}
+	if rep.Res == -1 {
+		log.Printf("Failed to playback file: %s\n", file)
 	}
 HANGUP:
 	//Hangup

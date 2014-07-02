@@ -106,10 +106,11 @@ func TestRes(t *testing.T) {
 // Test the generation of AGI commands
 func TestCmd(t *testing.T) {
 	var r Reply
+	a := new(Session)
 	wc := new(writeConn)
 	data := genEnv()
 	data = append(data, "200 result=1 endpos=1234\n"...)
-	a, err := Init(
+	err := a.Init(
 		bufio.NewReadWriter(
 			bufio.NewReader(bytes.NewReader(data)),
 			bufio.NewWriter(io.Writer(wc)),
@@ -141,7 +142,8 @@ func TestCmd(t *testing.T) {
 func BenchmarkParseEnv(b *testing.B) {
 	data := genEnv()
 	for i := 0; i < b.N; i++ {
-		Init(
+		a := new(Session)
+		a.Init(
 			bufio.NewReadWriter(
 				bufio.NewReader(bytes.NewReader(data)),
 				nil,

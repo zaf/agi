@@ -17,9 +17,10 @@ const debug = false
 
 func main() {
 	//Start a new AGI session
-	myAgi, err := agi.Init(nil)
+	myAgi := new(agi.Session)
 	var rep agi.Reply
 	var file string
+	err := myAgi.Init(nil)
 	if err != nil {
 		log.Printf("Error Parsing AGI environment: %v\n", err)
 		return
@@ -54,7 +55,11 @@ func main() {
 	// Playback file
 	rep, err = myAgi.StreamFile(file, "1234567890*#")
 	if err != nil {
-		log.Printf("Error playing back file: %v\n", err)
+		log.Printf("AGI reply error: %v\n", err)
+		return
+	}
+	if rep.Res == -1 {
+		log.Printf("Error playing back file: %s\n", file)
 	}
 
 HANGUP:

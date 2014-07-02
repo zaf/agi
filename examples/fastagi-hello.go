@@ -32,10 +32,11 @@ func main() {
 }
 
 func connHandle(c net.Conn) {
-	//Create a new AGI session
-	rw := bufio.NewReadWriter(bufio.NewReader(c), bufio.NewWriter(c))
-	myAgi, err := agi.Init(rw)
 	defer c.Close()
+	//Create a new FastAGI session
+	myAgi := new(agi.Session)
+	rw := bufio.NewReadWriter(bufio.NewReader(c), bufio.NewWriter(c))
+	err := myAgi.Init(rw)
 	if err != nil {
 		log.Printf("Error Parsing AGI environment: %v\n", err)
 		return

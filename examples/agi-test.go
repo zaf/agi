@@ -47,16 +47,16 @@ func main() {
 }
 
 func spawnAgi(c net.Conn) {
-	var myAgi *agi.Session
+	myAgi := new(agi.Session)
 	var err error
 	if c != nil {
 		//Create a new FastAGI session
 		rw := bufio.NewReadWriter(bufio.NewReader(c), bufio.NewWriter(c))
-		myAgi, err = agi.Init(rw)
+		err = myAgi.Init(rw)
 		defer c.Close()
 	} else {
 		//Create a new AGI session
-		myAgi, err = agi.Init(nil)
+		err = myAgi.Init(nil)
 	}
 	if err != nil {
 		log.Printf("Error Parsing AGI environment: %v\n", err)

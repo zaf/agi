@@ -36,16 +36,16 @@ type Reply struct {
 }
 
 // Init initializes a new AGI session. If rw is nil the AGI session will use standard input (stdin)
-// and standard output (stdout). Returns a pointer to a Session and the error, if any.
-func Init(rw *bufio.ReadWriter) (*Session, error) {
-	a := new(Session)
+// and standard output (stdout). It reads and stores the AGI environment variables in Env.
+// Returns an error if the parsing of the AGI environment was unsuccessful.
+func (a *Session) Init(rw *bufio.ReadWriter) error {
 	if rw == nil {
 		a.buf = bufio.NewReadWriter(bufio.NewReader(os.Stdin), bufio.NewWriter(os.Stdout))
 	} else {
 		a.buf = rw
 	}
 	err := a.parseEnv()
-	return a, err
+	return err
 }
 
 // Answer answers channel. Res is -1 on channel failure, or 0 if successful.

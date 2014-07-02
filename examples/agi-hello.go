@@ -17,7 +17,8 @@ const debug = false
 
 func main() {
 	//Start a new AGI session
-	myAgi, err := agi.Init(nil)
+	myAgi := new(agi.Session)
+	err := myAgi.Init(nil)
 	if err != nil {
 		log.Printf("Error Parsing AGI environment: %v\n", err)
 		return
