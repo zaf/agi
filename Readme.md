@@ -35,15 +35,6 @@ type Session struct {
 
 Session is a struct holding AGI environment vars and the I/O handlers.
 
-#### func  Init
-
-```go
-func Init(rw *bufio.ReadWriter) (*Session, error)
-```
-Init initializes a new AGI session. If rw is nil the AGI session will use
-standard input (stdin) and standard output (stdout). Returns a pointer to a
-Session and the error, if any.
-
 #### func (*Session) Answer
 
 ```go
@@ -173,6 +164,16 @@ func (a *Session) Hangup(channel ...string) (Reply, error)
 ```
 Hangup hangs up a channel, Res is 1 on success, -1 if the given channel was not
 found.
+
+#### func (*Session) Init
+
+```go
+func (a *Session) Init(rw *bufio.ReadWriter) error
+```
+Init initializes a new AGI session. If rw is nil the AGI session will use
+standard input (stdin) and standard output (stdout). It reads and stores the AGI
+environment variables in Env. Returns an error if the parsing of the AGI
+environment was unsuccessful.
 
 #### func (*Session) Noop
 
