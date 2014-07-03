@@ -47,7 +47,7 @@ func main() {
 }
 
 func spawnAgi(c net.Conn) {
-	myAgi := new(agi.Session)
+	myAgi := agi.New()
 	var err error
 	if c != nil {
 		//Create a new FastAGI session

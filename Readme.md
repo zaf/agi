@@ -35,6 +35,13 @@ type Session struct {
 
 Session is a struct holding AGI environment vars and the I/O handlers.
 
+#### func  New
+
+```go
+func New() *Session
+```
+New creates a new Session and returns a pointer to it.
+
 #### func (*Session) Answer
 
 ```go
@@ -171,9 +178,9 @@ found.
 func (a *Session) Init(rw *bufio.ReadWriter) error
 ```
 Init initializes a new AGI session. If rw is nil the AGI session will use
-standard input (stdin) and standard output (stdout). It reads and stores the AGI
-environment variables in Env. Returns an error if the parsing of the AGI
-environment was unsuccessful.
+standard input (stdin) and output (stdout) for a standalone AGI application. It
+reads and stores the AGI environment variables in Env. Returns an error if the
+parsing of the AGI environment was unsuccessful.
 
 #### func (*Session) Noop
 

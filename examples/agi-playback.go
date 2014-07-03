@@ -17,7 +17,7 @@ const debug = false
 
 func main() {
 	//Start a new AGI session
-	myAgi := new(agi.Session)
+	myAgi := agi.New()
 	var rep agi.Reply
 	var file string
 	err := myAgi.Init(nil)

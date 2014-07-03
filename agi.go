@@ -35,9 +35,16 @@ type Reply struct {
 	Dat string //Additional returned data.
 }
 
+// New creates a new Session and returns a pointer to it.
+func New() *Session {
+	a := new(Session)
+	a.Env = make(map[string]string, 22)
+	return a
+}
+
 // Init initializes a new AGI session. If rw is nil the AGI session will use standard input (stdin)
-// and standard output (stdout). It reads and stores the AGI environment variables in Env.
-// Returns an error if the parsing of the AGI environment was unsuccessful.
+// and output (stdout) for a standalone AGI application. It reads and stores the AGI environment
+// variables in Env. Returns an error if the parsing of the AGI environment was unsuccessful.
 func (a *Session) Init(rw *bufio.ReadWriter) error {
 	if rw == nil {
 		a.buf = bufio.NewReadWriter(bufio.NewReader(os.Stdin), bufio.NewWriter(os.Stdout))
@@ -424,7 +431,6 @@ func (a *Session) WaitForDigit(timeout int) (Reply, error) {
 // parseEnv reads and stores AGI environment.
 func (a *Session) parseEnv() error {
 	var err error
-	a.Env = make(map[string]string, 22)
 	for i := 0; i <= envMax; i++ {
 		line, err := a.buf.ReadString('\n')
 		if err != nil || line == "\n" {

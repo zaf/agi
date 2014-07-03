@@ -72,7 +72,7 @@ func main() {
 
 func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 	//Create a new AGI session
-	myAgi := new(agi.Session)
+	myAgi := agi.New()
 	rw := bufio.NewReadWriter(bufio.NewReader(client), bufio.NewWriter(client))
 	err := myAgi.Init(rw)
 	defer func() {

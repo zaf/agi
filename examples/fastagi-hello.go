@@ -34,7 +34,7 @@ func main() {
 func connHandle(c net.Conn) {
 	defer c.Close()
 	//Create a new FastAGI session
-	myAgi := new(agi.Session)
+	myAgi := agi.New()
 	rw := bufio.NewReadWriter(bufio.NewReader(c), bufio.NewWriter(c))
 	err := myAgi.Init(rw)
 	if err != nil {
