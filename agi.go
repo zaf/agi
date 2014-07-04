@@ -456,15 +456,20 @@ func (a *Session) parseEnv() error {
 
 // sendMsg sends an AGI command and returns the result
 func (a *Session) sendMsg(s string) (Reply, error) {
+	r := Reply{-99, ""} //Set default result value to -99 for people that wont bother doing proper error checking.
 	s = strings.TrimSpace(s)
-	fmt.Fprintln(a.buf, s)
-	a.buf.Flush()
+	if _, err := fmt.Fprintln(a.buf, s); err != nil {
+		return r, err
+	}
+	if err := a.buf.Flush(); err != nil {
+		return r, err
+	}
 	return a.parseResponse()
 }
 
 // parseResponse reads back and parses AGI repsonse. Returns the Reply and the protocol error, if any.
 func (a *Session) parseResponse() (Reply, error) {
-	r := Reply{-99, ""} //Set default result value to -99 for people that wont bother doing proper error checking.
+	r := Reply{-99, ""} //Set default Res value to -99 for the same reason as above.
 	var err error
 	line, _ := a.buf.ReadString('\n')
 	line = strings.TrimRight(line, "\n")
