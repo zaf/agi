@@ -454,24 +454,27 @@ func (a *Session) parseEnv() error {
 	return err
 }
 
-// sendMsg sends an AGI command and returns the result
+// sendMsg sends an AGI command and returns the result. In case of error Reply.Res is set to -99
+// for people that wont bother doing proper error cheching.
 func (a *Session) sendMsg(s string) (Reply, error) {
-	r := Reply{-99, ""} //Set default result value to -99 for people that wont bother doing proper error checking.
 	s = strings.TrimSpace(s)
 	if _, err := fmt.Fprintln(a.buf, s); err != nil {
-		return r, err
+		return Reply{-99, ""}, err
 	}
 	if err := a.buf.Flush(); err != nil {
-		return r, err
+		return Reply{-99, ""}, err
 	}
 	return a.parseResponse()
 }
 
 // parseResponse reads back and parses AGI repsonse. Returns the Reply and the protocol error, if any.
+// In case of error Res is again set to -99 for the aforementioned reason.
 func (a *Session) parseResponse() (Reply, error) {
-	r := Reply{-99, ""} //Set default Res value to -99 for the same reason as above.
-	var err error
-	line, _ := a.buf.ReadString('\n')
+	r := Reply{-99, ""}
+	line, err := a.buf.ReadString('\n')
+	if err != nil {
+		return r, err
+	}
 	line = strings.TrimRight(line, "\n")
 	tkns := strings.SplitN(line, " ", 3)
 	if len(tkns) < 2 {
@@ -483,7 +486,9 @@ func (a *Session) parseResponse() (Reply, error) {
 	switch tkns[0] {
 	case "200":
 		res := (strings.TrimPrefix(tkns[1], "result="))
-		r.Res, _ = strconv.Atoi(res)
+		if r.Res, err = strconv.Atoi(res); err != nil {
+			return Reply{-99, ""}, err
+		}
 		if len(tkns) == 3 {
 			r.Dat = tkns[2]
 		}
