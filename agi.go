@@ -455,7 +455,7 @@ func (a *Session) parseEnv() error {
 }
 
 // sendMsg sends an AGI command and returns the result. In case of error Reply.Res is set to -99
-// for people that wont bother doing proper error cheching.
+// for people that wont bother doing proper error checking.
 func (a *Session) sendMsg(s string) (Reply, error) {
 	s = strings.TrimSpace(s)
 	if _, err := fmt.Fprintln(a.buf, s); err != nil {
