@@ -486,7 +486,8 @@ func (a *Session) parseResponse() (Reply, error) {
 	switch tkns[0] {
 	case "200":
 		res := (strings.TrimPrefix(tkns[1], "result="))
-		if r.Res, err = strconv.Atoi(res); err != nil {
+		r.Res, err = strconv.Atoi(res)
+		if err != nil {
 			return Reply{-99, ""}, err
 		}
 		if len(tkns) == 3 {
