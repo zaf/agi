@@ -16,7 +16,7 @@ import (
 const debug = false
 
 func main() {
-	//Start a new AGI session
+	// Create a new AGI session and Parse the AGI environment.
 	myAgi := agi.New()
 	err := myAgi.Init(nil)
 	if err != nil {
@@ -24,22 +24,22 @@ func main() {
 		return
 	}
 	if debug {
-		//Print AGI environment
+		// Print to stderr all AGI environment variables that are stored in myAgi.Env map.
 		log.Println("AGI environment vars:")
 		for key, value := range myAgi.Env {
 			log.Printf("%-15s: %s\n", key, value)
 		}
 	}
-	//Print a message on asterisk console
+	// Print a message on the asterisk console using Verbose. AGI return values are stored in rep, an agi.Reply struct.
 	rep, err := myAgi.Verbose("Hello World")
 	if err != nil {
 		log.Printf("AGI reply error: %v\n", err)
 		return
 	}
 	if debug {
-		//Print the response
-		log.Printf("AGI command returned: %v\n", rep.Res)
+		// Print to stderr the AGI return values. In this case rep.Res is always 1 and rep.Dat is empty.
+		log.Printf("AGI command returned: %d %s\n", rep.Res, rep.Dat)
 	}
-	//Hangup
+	// Hangup
 	myAgi.Hangup()
 }

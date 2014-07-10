@@ -1,4 +1,4 @@
-// Payback a file using AGI example in Go
+// Payback a file using AGI example in Go.
 //
 // Copyright (C) 2013 - 2014, Lefteris Zafiris <zaf.000@gmail.com>
 // This program is free software, distributed under the terms of
@@ -16,35 +16,36 @@ import (
 const debug = false
 
 func main() {
-	//Start a new AGI session
-	myAgi := agi.New()
-	var rep agi.Reply
 	var file string
+	var rep agi.Reply
+	// Create a new AGI session and Parse the AGI environment.
+	myAgi := agi.New()
 	err := myAgi.Init(nil)
 	if err != nil {
 		log.Printf("Error Parsing AGI environment: %v\n", err)
 		return
 	}
 	if debug {
-		//Print AGI environment
+		// Print to stderr all AGI environment variables that are stored in myAgi.Env map.
 		log.Println("AGI environment vars:")
 		for key, value := range myAgi.Env {
 			log.Printf("%-15s: %s\n", key, value)
 		}
 	}
-	// Check passed arguments
+	// Check passed arguments. The filename of the file to be played back is supposed to be passed
+	// as the first argument to the AGI script.
 	if myAgi.Env["arg_1"] == "" {
 		log.Println("No arguments passed, exiting...")
 		goto HANGUP
 	}
 	file = myAgi.Env["arg_1"]
-	// Chech channel status
+	// Chech channel status.
 	rep, err = myAgi.ChannelStatus()
 	if err != nil {
 		log.Printf("AGI reply error: %v\n", err)
 		return
 	}
-	//Answer channel if not already answered
+	// Answer channel if not already answered.
 	if rep.Res != 6 {
 		rep, err = myAgi.Answer()
 		if err != nil || rep.Res == -1 {
@@ -63,6 +64,5 @@ func main() {
 	}
 
 HANGUP:
-	//Hangup
 	myAgi.Hangup()
 }

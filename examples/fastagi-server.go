@@ -71,7 +71,7 @@ func main() {
 }
 
 func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
-	//Create a new AGI session
+	// Create a new AGI session
 	myAgi := agi.New()
 	rw := bufio.NewReadWriter(bufio.NewReader(client), bufio.NewWriter(client))
 	err := myAgi.Init(rw)
@@ -89,7 +89,7 @@ func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 	var file string
 	var rep agi.Reply
 	if *debug {
-		//Print AGI environment
+		// Print AGI environment
 		log.Println("AGI environment vars:")
 		for key, value := range myAgi.Env {
 			log.Printf("%-15s: %s\n", key, value)
@@ -110,7 +110,7 @@ func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 		log.Printf("AGI reply error: %v\n", err)
 		return
 	}
-	//Answer channel if not already answered
+	// Answer channel if not already answered
 	if rep.Res != 6 {
 		rep, err = myAgi.Answer()
 		if err != nil || rep.Res == -1 {
@@ -128,7 +128,6 @@ func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 		log.Printf("Failed to playback file: %s\n", file)
 	}
 HANGUP:
-	//Hangup
 	myAgi.Hangup()
 	return
 }
