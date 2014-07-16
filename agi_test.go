@@ -35,9 +35,9 @@ agi_priority: 1
 agi_enhanced: 0.0
 agi_accountcode: 0
 agi_threadid: -1289290944
-agi_arg_1: foo
-agi_arg_2: bar
-agi_arg_3: roo
+agi_arg_1: argument1
+agi_arg_2: argument 2
+agi_arg_3: 3
 
 `)
 
@@ -64,19 +64,19 @@ func TestAgiEnv(t *testing.T) {
 	)
 	err := a.parseEnv()
 	if err != nil {
-		t.Error("parseEnv failed")
+		t.Errorf("parseEnv failed: %v", err)
 	}
 	if len(a.Env) != 25 {
-		t.Error("Error parsing complete AGI environment var list.")
+		t.Errorf("Error parsing complete AGI environment var list. Expected length: 25, reported: %d", len(a.Env))
 	}
-	if a.Env["arg_1"] != "foo" {
-		t.Error("Error parsing arg1")
+	if a.Env["arg_1"] != "argument1" {
+		t.Errorf("Error parsing arg1. Expecting: argiment1, got: %s", a.Env["arg_1"])
 	}
-	if a.Env["arg_2"] != "bar" {
-		t.Error("Error parsing arg2")
+	if a.Env["arg_2"] != "argument 2" {
+		t.Errorf("Error parsing arg2. Expecting: argument 2, got: %s", a.Env["arg_2"])
 	}
-	if a.Env["arg_3"] != "roo" {
-		t.Error("Error parsing arg3")
+	if a.Env["arg_3"] != "3" {
+		t.Errorf("Error parsing arg3. Expecting: 3, got: %s", a.Env["arg_3"])
 	}
 }
 
@@ -89,17 +89,17 @@ func TestRes(t *testing.T) {
 	)
 	r, err := a.parseResponse()
 	if err != nil {
-		t.Error("Error parsing AGI 200 response.")
+		t.Errorf("Error parsing AGI 200 response: %v", err)
 	}
 	if r.Dat != "" {
-		t.Error("Error parsing AGI 200 response.")
+		t.Errorf("Error parsing AGI 200 response. Got unexpected data: %d", r.Dat)
 	}
 	if r.Res != 1 {
-		t.Error("Error parsing AGI 200 response.")
+		t.Errorf("Error parsing AGI 200 response. Expecting: 1, got: %d", r.Res)
 	}
 	r, err = a.parseResponse()
 	if r.Dat != "(speech) endpos=1234 results=foo bar" {
-		t.Error("Error parsing AGI complex 200 response.")
+		t.Errorf("Error parsing AGI complex 200 response: %v", r)
 	}
 
 	_, err = a.parseResponse()
@@ -142,8 +142,7 @@ func TestCmd(t *testing.T) {
 	var b []byte
 	buf := bytes.NewBuffer(b)
 	a := New()
-	data := env
-	data = append(data, "200 result=1 endpos=1234\n"...)
+	data := append(env, "200 result=1 endpos=1234\n"...)
 	err := a.Init(
 		bufio.NewReadWriter(
 			bufio.NewReader(bytes.NewReader(data)),
@@ -152,24 +151,24 @@ func TestCmd(t *testing.T) {
 	)
 
 	if err != nil {
-		t.Error("Failed to initialize new AGI session")
+		t.Errorf("Failed to initialize new AGI session: %v", err)
 	}
 	r, err = a.GetOption("echo", "any")
 	if err != nil {
-		t.Error("Failed to parse AGI responce")
+		t.Errorf("Failed to parse AGI responce: %v", err)
 	}
 	if buf.Len() == 0 {
 		t.Error("Failed to send AGI command")
 	}
 	str, _ := buf.ReadString(10)
 	if str != "GET OPTION echo \"any\"\n" {
-		t.Error("Failed to sent properly formatted AGI command")
+		t.Errorf("Failed to sent properly formatted AGI command: %s", str)
 	}
 	if r.Res != 1 {
-		t.Error("Failed to get the right numeric result")
+		t.Errorf("Failed to get the right numeric result. Expecting: 1, got: %d", r.Res)
 	}
 	if r.Dat != "1234" {
-		t.Error("Failed to properly parse the rest of the response")
+		t.Errorf("Failed to properly parse the rest of the response. Expecting: 1234, got: %s", r.Dat)
 	}
 }
 
@@ -189,6 +188,7 @@ func BenchmarkParseEnv(b *testing.B) {
 // Benchmark AGI response parsing
 func BenchmarkParseRes(b *testing.B) {
 	a := New()
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		a.buf = bufio.NewReadWriter(
 			bufio.NewReader(bytes.NewReader(rep)),
