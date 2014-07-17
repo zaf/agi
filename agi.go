@@ -192,15 +192,15 @@ func (a *Session) GoSub(context, extension, priority, args string) (Reply, error
 
 // Hangup hangs up a channel, Res is 1 on success, -1 if the given channel was not found.
 func (a *Session) Hangup(channel ...string) (Reply, error) {
+	var r Reply
 	var err error
-	var res Reply
 	if len(channel) > 0 {
-		res, err = a.sendMsg(fmt.Sprintf("HANGUP %s", channel[0]))
+		r, err = a.sendMsg(fmt.Sprintf("HANGUP %s", channel[0]))
 	} else {
-		res, err = a.sendMsg(fmt.Sprintf("HANGUP"))
+		r, err = a.sendMsg(fmt.Sprintf("HANGUP"))
 	}
-	a.parseResponse()
-	return res, err
+	a.buf.ReadBytes(10) //Read 'HANGUP' command from asterisk
+	return r, err
 }
 
 // Noop does nothing. Res is always 0.
