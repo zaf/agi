@@ -476,27 +476,29 @@ func (a *Session) sendMsg(s string) (Reply, error) {
 // In case of error Res is again set to -99 for the aforementioned reason.
 func (a *Session) parseResponse() (Reply, error) {
 	r := Reply{-99, ""}
-	line, err := a.buf.ReadString('\n')
+	line, err := a.buf.ReadBytes(10)
 	if err != nil {
 		return r, err
 	}
-	line = strings.TrimRight(line, "\n")
-	tkns := strings.SplitN(line, " ", 3)
-	if len(tkns) < 2 {
-		if tkns[0] == "HANGUP" {
-			return r, fmt.Errorf("client sent a HANGUP request")
-		}
-		return r, fmt.Errorf("erroneous or partial agi response: %v", tkns)
+	line = line[:len(line)-1] //Strip trailing newline
+	i := bytes.IndexByte(line, ' ')
+	if i <= 0 || len(line) < 6 {
+		return r, fmt.Errorf("malformed or partial agi response: %s", string(line))
 	}
-	switch tkns[0] {
+	switch string(line[:i]) {
 	case "200":
-		res := (strings.TrimPrefix(tkns[1], "result="))
-		r.Res, err = strconv.Atoi(res)
-		if err != nil {
-			return Reply{-99, ""}, err
+		if len(line[i:]) < 9 { //200 Responce in in the form ' result=x'
+			err = fmt.Errorf("malformed 200 response: %s", string(line))
 		}
-		if len(tkns) == 3 {
-			r.Dat = tkns[2]
+		line = line[i+8:] //strip " result=" prefix
+		k := bytes.IndexByte(line, ' ')
+		if k < 0 {
+			r.Res, err = strconv.Atoi(string(line))
+		} else if k > 0 { //Additional returned data
+			r.Res, err = strconv.Atoi(string(line[:k]))
+			r.Dat = string(line[k+1:])
+		} else {
+			err = fmt.Errorf("malformed 200 response: %s", string(line))
 		}
 	case "510":
 		err = fmt.Errorf("invalid or unknown command")
@@ -506,9 +508,11 @@ func (a *Session) parseResponse() (Reply, error) {
 		err = fmt.Errorf("invalid command syntax")
 	case "520-Invalid":
 		err = fmt.Errorf("invalid command syntax")
-		a.buf.ReadString('\n')
+		a.buf.ReadBytes(10)
+	case "HANGUP":
+		return r, fmt.Errorf("client sent a HANGUP request")
 	default:
-		err = fmt.Errorf("erroneous agi response: %v", tkns)
+		err = fmt.Errorf("malformed or partial agi response: %s", string(line))
 	}
 	return r, err
 }

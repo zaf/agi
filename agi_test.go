@@ -92,15 +92,22 @@ func TestRes(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error parsing AGI 200 response: %v", err)
 	}
-	if r.Dat != "" {
-		t.Errorf("Error parsing AGI 200 response. Got unexpected data: %d", r.Dat)
-	}
 	if r.Res != 1 {
 		t.Errorf("Error parsing AGI 200 response. Expecting: 1, got: %d", r.Res)
 	}
+	if r.Dat != "" {
+		t.Errorf("Error parsing AGI 200 response. Got unexpected data: %d", r.Dat)
+	}
+
 	r, err = a.parseResponse()
+	if err != nil {
+		t.Errorf("Error parsing AGI complex 200 response: %v", err)
+	}
+	if r.Res != 1 {
+		t.Errorf("Error parsing AGI complex 200 response. Expecting: 1, got: %d", r.Res)
+	}
 	if r.Dat != "(speech) endpos=1234 results=foo bar" {
-		t.Errorf("Error parsing AGI complex 200 response: %v", r)
+		t.Errorf("Error parsing AGI complex 200 response. Expecting: (speech) endpos=1234 results=foo bar, got: %s", r.Dat)
 	}
 
 	_, err = a.parseResponse()
