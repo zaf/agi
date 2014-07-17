@@ -457,19 +457,19 @@ func (a *Session) parseEnv() error {
 		}
 		//Strip trailing newline
 		line = line[:len(line)-1]
-		i := bytes.IndexByte(line, ':')
+		ind := bytes.IndexByte(line, ':')
 		//"agi_type" is the shortest length key, anything shorter is invalid.
-		if i < len("agi_type") || i == len(line)-1 {
+		if ind < len("agi_type") || ind == len(line)-1 {
 			//line doesn't match: /^.{8,}:\s.+\n$/
 			err = fmt.Errorf("malformed environment input: %s", string(line))
 			a.Env = nil
 			return err
 		}
 		//Strip 'agi_' prefix from key.
-		key := string(line[len("agi_"):i])
+		key := string(line[len("agi_"):ind])
 		//Strip leading colon and space from value.
-		i += len(": ")
-		value := string(line[i:])
+		ind += len(": ")
+		value := string(line[ind:])
 		a.Env[key] = value
 	}
 	if len(a.Env) < envMin {
@@ -502,8 +502,8 @@ func (a *Session) parseResponse() (Reply, error) {
 	}
 	//Strip trailing newline
 	line = line[:len(line)-1]
-	i := bytes.IndexByte(line, ' ')
-	if i <= 0 || i == len(line)-1 {
+	ind := bytes.IndexByte(line, ' ')
+	if ind <= 0 || ind == len(line)-1 {
 		//line doesnt match /^\w+\s.+$/
 		if string(line) == "HANGUP" {
 			err = fmt.Errorf("client sent a HANGUP request")
@@ -512,7 +512,7 @@ func (a *Session) parseResponse() (Reply, error) {
 		}
 		return r, err
 	}
-	switch string(line[:i]) {
+	switch string(line[:ind]) {
 	case "200":
 		eqInd := bytes.IndexByte(line, '=')
 		//Check if line matches /^200\s\w{7}=.*$/
