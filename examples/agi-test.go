@@ -6,32 +6,41 @@
 // at the top of the source tree.
 //
 // Based on agi-test.agi from asterisk source tree.
-// Can be used both as standalone AGI app or a FastAGI server
-// if called with the flag '-spawn_fagi'
+// Can be used both as a standalone AGI app or a FastAGI server.
+// When called directly from the  asterisk dialplan it behaves like an ordinary AGI app.
+// When started on its own outside asterisk it spawns as a FastAGI server and
+// listens for connections on 127.0.0.1:4573
 
 package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"log"
 	"net"
+	"os"
 
 	"github.com/zaf/agi"
 )
 
-var listen = flag.Bool("spawn_fagi", false, "Spawn as a FastAGI server")
-
 func main() {
-	flag.Parse()
-	if *listen {
+	// Get Asterisk Environment Variables. These are set by asterisk when
+	// directly excetues an AGI application and they are not available in FastAGI sessions.
+	astEnv := getAstEnv()
+
+	// We check the availability of the Environment Variables to determine if the program
+	// should behave as AGI app or FastAGI server.
+	if astEnv["AST_AGI_DIR"] != "" {
+		// Started as a standalone AGI app by asterisk.
+		spawnAgi(nil)
+	} else {
 		// If started as a FastAGI server create a listener on port 4573
 		// and start a new goroutine for each connection.
 		ln, err := net.Listen("tcp", ":4573")
 		if err != nil {
 			log.Fatal(err)
 		}
+		log.Printf("Listening for FastAGI connections on 127.0.0.1:4573\n")
 		defer ln.Close()
 		for {
 			conn, err := ln.Accept()
@@ -41,10 +50,25 @@ func main() {
 			}
 			go spawnAgi(conn)
 		}
-	} else {
-		// Started as a standalone AGI app.
-		spawnAgi(nil)
 	}
+}
+
+//Parse and store asterisk Environment Variables.
+func getAstEnv() map[string]string {
+	var env = map[string]string{
+		"AST_CONFIG_DIR":  os.Getenv("AST_CONFIG_DIR"),
+		"AST_CONFIG_FILE": os.Getenv("AST_CONFIG_FILE"),
+		"AST_MODULE_DIR":  os.Getenv("AST_MODULE_DIR"),
+		"AST_SPOOL_DIR":   os.Getenv("AST_SPOOL_DIR"),
+		"AST_MONITOR_DIR": os.Getenv("AST_MONITOR_DIR"),
+		"AST_VAR_DIR":     os.Getenv("AST_VAR_DIR"),
+		"AST_DATA_DIR":    os.Getenv("AST_DATA_DIR"),
+		"AST_LOG_DIR":     os.Getenv("AST_LOG_DIR"),
+		"AST_AGI_DIR":     os.Getenv("AST_AGI_DIR"),
+		"AST_KEY_DIR":     os.Getenv("AST_KEY_DIR"),
+		"AST_RUN_DIR":     os.Getenv("AST_RUN_DIR"),
+	}
+	return env
 }
 
 // Start the AGI or FastAGI session.
