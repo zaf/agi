@@ -182,6 +182,18 @@ standard input (stdin) and output (stdout) for a standalone AGI application. It
 reads and stores the AGI environment variables in Env. Returns an error if the
 parsing of the AGI environment was unsuccessful.
 
+For example, we create a new AGI session, initialize it and print the Env
+variables by using:
+
+    myAgi := agi.New()
+    err := myAgi.Init(nil)
+    if err != nil {
+    	log.Fatal("Error Parsing AGI environment: %v\n", err)
+    }
+    for key, value := range myAgi.Env {
+    	log.Printf("%-15s: %s\n", key, value)
+    }
+
 #### func (*Session) Noop
 
 ```go
