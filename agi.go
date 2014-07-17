@@ -439,12 +439,12 @@ func (a *Session) parseEnv() error {
 	var err error
 	for i := 0; i <= envMax; i++ {
 		line, err := a.buf.ReadBytes(10)
-		if err != nil || len(line) == 1 {
+		if err != nil || len(line) <= 2 {
 			break
 		}
 		i := bytes.IndexByte(line, ':')
-		if i < 5 {
-			err = fmt.Errorf("malformed environment input: %v", line)
+		if i < 5 || len(line) < 8 {
+			err = fmt.Errorf("malformed environment input: %s", string(line))
 			a.Env = nil
 			return err
 		}
