@@ -452,20 +452,24 @@ func (a *Session) parseEnv() error {
 	var err error
 	for i := 0; i <= envMax; i++ {
 		line, err := a.buf.ReadBytes(10)
-		if err != nil || len(line) <= 2 {
+		if err != nil || len(line) <= len("\r\n") {
 			break
 		}
+		//Strip trailing newline
+		line = line[:len(line)-1]
 		i := bytes.IndexByte(line, ':')
-		if i < 8 || i == len(line)-2 {
+		//"agi_type" is the shortest length key, anything shorter is invalid.
+		if i < len("agi_type") || i == len(line)-1 {
 			//line doesn't match: /^.{8,}:\s.+\n$/
 			err = fmt.Errorf("malformed environment input: %s", string(line))
 			a.Env = nil
 			return err
 		}
 		//Strip 'agi_' prefix from key.
-		key := string(line[4:i])
-		//Strip leading colon and space and trailing newline from value.
-		value := string(line[i+2 : len(line)-1])
+		key := string(line[len("agi_"):i])
+		//Strip leading colon and space from value.
+		i += len(": ")
+		value := string(line[i:])
 		a.Env[key] = value
 	}
 	if len(a.Env) < envMin {
@@ -510,28 +514,28 @@ func (a *Session) parseResponse() (Reply, error) {
 	}
 	switch string(line[:i]) {
 	case "200":
-		e := bytes.IndexByte(line, '=')
+		eqInd := bytes.IndexByte(line, '=')
 		//Check if line matches /^200\s\w{7}=.*$/
-		if e == 10 && e < len(line)-1 {
+		if eqInd == len("200 result") && eqInd < len(line)-1 {
 			//Strip the "200 result=" prefix.
-			line = line[e+1:]
-			s := bytes.IndexByte(line, ' ')
-			if s < 0 {
+			line = line[eqInd+1:]
+			spInd := bytes.IndexByte(line, ' ')
+			if spInd < 0 {
 				//line matches /^\w$/
 				r.Res, err = strconv.Atoi(string(line))
 				if err != nil {
 					err = fmt.Errorf("failed to parse AGI 200 reply: %v", err)
 					r.Res = -99
 				}
-			} else if s > 0 && s < len(line)-1 {
+			} else if spInd > 0 && spInd < len(line)-1 {
 				//line matches /^\w+\s.+$/
-				r.Res, err = strconv.Atoi(string(line[:s]))
+				r.Res, err = strconv.Atoi(string(line[:spInd]))
 				if err != nil {
 					err = fmt.Errorf("failed to parse AGI 200 reply: %v", err)
 					r.Res = -99
 				}
 				//Strip leading space and save additional returned data.
-				r.Dat = string(line[s+1:])
+				r.Dat = string(line[spInd+1:])
 			}
 			break
 		}
@@ -544,7 +548,7 @@ func (a *Session) parseResponse() (Reply, error) {
 		err = fmt.Errorf("invalid command syntax")
 	case "520-Invalid":
 		err = fmt.Errorf("invalid command syntax")
-		a.buf.ReadBytes(10)
+		a.buf.ReadBytes(10) //Read Command syntax doc.
 	default:
 		err = fmt.Errorf("malformed or partial agi response: %s", string(line))
 	}
