@@ -65,7 +65,7 @@ func TestAgiEnv(t *testing.T) {
 	)
 	err := a.parseEnv()
 	if err != nil {
-		t.Errorf("parseEnv failed: %v", err)
+		t.Fatalf("parseEnv failed: %v", err)
 	}
 	if len(a.Env) != 25 {
 		t.Errorf("Error parsing complete AGI environment var list. Expected length: 25, reported: %d", len(a.Env))
@@ -163,7 +163,7 @@ func TestCmd(t *testing.T) {
 	)
 
 	if err != nil {
-		t.Errorf("Failed to initialize new AGI session: %v", err)
+		t.Fatalf("Failed to initialize new AGI session: %v", err)
 	}
 	r, err = a.GetOption("echo", "any")
 	if err != nil {

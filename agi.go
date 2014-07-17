@@ -39,7 +39,7 @@ type Reply struct {
 // New creates a new Session and returns a pointer to it.
 func New() *Session {
 	a := new(Session)
-	a.Env = make(map[string]string, envMin+2)
+	a.Env = make(map[string]string, envMin+5)
 	return a
 }
 
@@ -456,13 +456,16 @@ func (a *Session) parseEnv() error {
 			break
 		}
 		i := bytes.IndexByte(line, ':')
-		if i < 5 || len(line) < 8 {
+		if i < 8 || i == len(line)-2 {
+			//line doesn't match: /^.{8,}:\s.+\n$/
 			err = fmt.Errorf("malformed environment input: %s", string(line))
 			a.Env = nil
 			return err
 		}
-		key := string(line[4:i])                 //Strip 'agi_' prefix.
-		value := string(line[i+2 : len(line)-1]) //Skip colon and space, strip trailing newline.
+		//Strip 'agi_' prefix from key.
+		key := string(line[4:i])
+		//Strip leading colon and space and trailing newline from value.
+		value := string(line[i+2 : len(line)-1])
 		a.Env[key] = value
 	}
 	if len(a.Env) < envMin {
@@ -473,7 +476,7 @@ func (a *Session) parseEnv() error {
 }
 
 // sendMsg sends an AGI command and returns the result. In case of error Reply.Res is set to -99
-// for people that wont bother doing proper error checking.
+// for people that wont bother doing proper error checking. :(
 func (a *Session) sendMsg(s string) (Reply, error) {
 	s = strings.TrimSpace(s)
 	if _, err := fmt.Fprintln(a.buf, s); err != nil {
@@ -493,26 +496,46 @@ func (a *Session) parseResponse() (Reply, error) {
 	if err != nil {
 		return r, err
 	}
-	line = line[:len(line)-1] //Strip trailing newline
+	//Strip trailing newline
+	line = line[:len(line)-1]
 	i := bytes.IndexByte(line, ' ')
-	if i <= 0 || len(line) < 6 {
-		return r, fmt.Errorf("malformed or partial agi response: %s", string(line))
+	if i <= 0 || i == len(line)-1 {
+		//line doesnt match /^\w+\s.+$/
+		if string(line) == "HANGUP" {
+			err = fmt.Errorf("client sent a HANGUP request")
+		} else {
+			err = fmt.Errorf("malformed or partial agi response: %s", string(line))
+		}
+		return r, err
 	}
 	switch string(line[:i]) {
 	case "200":
-		if len(line[i:]) < 9 { //200 Responce in in the form ' result=x'
-			err = fmt.Errorf("malformed 200 response: %s", string(line))
+		e := bytes.IndexByte(line, '=')
+		//Check if line matches /^200\s\w{7}=.*$/
+		if e == 10 && e < len(line)-1 {
+			//Strip the "200 result=" prefix.
+			line = line[e+1:]
+			s := bytes.IndexByte(line, ' ')
+			if s < 0 {
+				//line matches /^\w$/
+				r.Res, err = strconv.Atoi(string(line))
+				if err != nil {
+					err = fmt.Errorf("failed to parse AGI 200 reply: %v", err)
+					r.Res = -99
+				}
+			} else if s > 0 && s < len(line)-1 {
+				//line matches /^\w+\s.+$/
+				r.Res, err = strconv.Atoi(string(line[:s]))
+				if err != nil {
+					err = fmt.Errorf("failed to parse AGI 200 reply: %v", err)
+					r.Res = -99
+				}
+				//Strip leading space and save additional returned data.
+				r.Dat = string(line[s+1:])
+			}
+			break
 		}
-		line = line[i+8:] //strip " result=" prefix
-		k := bytes.IndexByte(line, ' ')
-		if k < 0 {
-			r.Res, err = strconv.Atoi(string(line))
-		} else if k > 0 { //Additional returned data
-			r.Res, err = strconv.Atoi(string(line[:k]))
-			r.Dat = string(line[k+1:])
-		} else {
-			err = fmt.Errorf("malformed 200 response: %s", string(line))
-		}
+		err = fmt.Errorf("malformed 200 response: %s", string(line))
 	case "510":
 		err = fmt.Errorf("invalid or unknown command")
 	case "511":
@@ -522,8 +545,6 @@ func (a *Session) parseResponse() (Reply, error) {
 	case "520-Invalid":
 		err = fmt.Errorf("invalid command syntax")
 		a.buf.ReadBytes(10)
-	case "HANGUP":
-		return r, fmt.Errorf("client sent a HANGUP request")
 	default:
 		err = fmt.Errorf("malformed or partial agi response: %s", string(line))
 	}
