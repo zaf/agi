@@ -12,6 +12,7 @@ package agi
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"strconv"
@@ -38,7 +39,7 @@ type Reply struct {
 // New creates a new Session and returns a pointer to it.
 func New() *Session {
 	a := new(Session)
-	a.Env = make(map[string]string, 22)
+	a.Env = make(map[string]string, envMin+2)
 	return a
 }
 
@@ -191,10 +192,15 @@ func (a *Session) GoSub(context, extension, priority, args string) (Reply, error
 
 // Hangup hangs up a channel, Res is 1 on success, -1 if the given channel was not found.
 func (a *Session) Hangup(channel ...string) (Reply, error) {
+	var err error
+	var res Reply
 	if len(channel) > 0 {
-		return a.sendMsg(fmt.Sprintf("HANGUP %s", channel[0]))
+		res, err = a.sendMsg(fmt.Sprintf("HANGUP %s", channel[0]))
+	} else {
+		res, err = a.sendMsg(fmt.Sprintf("HANGUP"))
 	}
-	return a.sendMsg(fmt.Sprintf("HANGUP"))
+	a.parseResponse()
+	return res, err
 }
 
 // Noop does nothing. Res is always 0.
@@ -432,23 +438,22 @@ func (a *Session) WaitForDigit(timeout int) (Reply, error) {
 func (a *Session) parseEnv() error {
 	var err error
 	for i := 0; i <= envMax; i++ {
-		line, err := a.buf.ReadString('\n')
-		if err != nil || line == "\n" {
+		line, err := a.buf.ReadBytes(10)
+		if err != nil || len(line) == 1 {
 			break
 		}
-		inputStr := strings.SplitN(line, ": ", 2)
-		if len(inputStr) == 2 {
-			inputStr[0] = strings.TrimPrefix(inputStr[0], "agi_")
-			inputStr[1] = strings.TrimRight(inputStr[1], "\n")
-			a.Env[inputStr[0]] = inputStr[1]
-		} else {
-			err = fmt.Errorf("erroneous environment input: %v", inputStr)
+		i := bytes.IndexByte(line, ':')
+		if i < 5 {
+			err = fmt.Errorf("malformed environment input: %v", line)
 			a.Env = nil
 			return err
 		}
+		key := string(line[4:i])                 //Strip 'agi_' prefix.
+		value := string(line[i+2 : len(line)-1]) //Skip colon and space, strip trailing newline.
+		a.Env[key] = value
 	}
 	if len(a.Env) < envMin {
-		err = fmt.Errorf("incomplete environment with %d env vars", len(a.Env))
+		err = fmt.Errorf("incomplete environment with only %d env vars", len(a.Env))
 		a.Env = nil
 	}
 	return err

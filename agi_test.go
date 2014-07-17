@@ -53,6 +53,7 @@ Answers channel if not already in answer state. Returns -1 on channel failure, o
 
 
 some random reply that we are not supposed to get
+HANGUP
 `)
 
 // Test AGI environment parsing
@@ -70,7 +71,7 @@ func TestAgiEnv(t *testing.T) {
 		t.Errorf("Error parsing complete AGI environment var list. Expected length: 25, reported: %d", len(a.Env))
 	}
 	if a.Env["arg_1"] != "argument1" {
-		t.Errorf("Error parsing arg1. Expecting: argiment1, got: %s", a.Env["arg_1"])
+		t.Errorf("Error parsing arg1. Expecting: argument1, got: %s", a.Env["arg_1"])
 	}
 	if a.Env["arg_2"] != "argument 2" {
 		t.Errorf("Error parsing arg2. Expecting: argument 2, got: %s", a.Env["arg_2"])
@@ -133,6 +134,10 @@ func TestRes(t *testing.T) {
 	_, err = a.parseResponse()
 	if err == nil {
 		t.Error("No error after parsing an erroneous AGI response.")
+	}
+	_, err = a.parseResponse()
+	if err == nil {
+		t.Error("Failed to detect a HANGUP reguest.")
 	}
 }
 
