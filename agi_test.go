@@ -9,6 +9,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"io/ioutil"
 	"testing"
 )
 
@@ -41,6 +42,13 @@ agi_arg_3: 3
 
 `)
 
+var envInv = []byte(`agi_:
+agi_arg_1 foo
+agi_type:
+agi_verylongrandomparameter: 0
+a
+`)
+
 // AGI Responses
 var rep = []byte(`200 result=1
 200 result=1 (speech) endpos=1234 results=foo bar
@@ -48,20 +56,32 @@ var rep = []byte(`200 result=1
 511 Command Not Permitted on a dead channel
 520 Invalid command syntax.  Proper usage not available.
 520-Invalid command syntax.  Proper usage follows:
-Answers channel if not already in answer state. Returns -1 on channel failure, or 0 if successful.
-200
+Answers channel if not already in answer state. Returns -1 on channel failure, or 0 if successful.520 End of proper usage.
+HANGUP
+`)
 
+var repInv = []byte(`200
+200 result 1
 
 some random reply that we are not supposed to get
+`)
+
+var repVal = []byte(`200 result=1
+200 result=1
+200 result=1 endpos=1234
+200 result=1
+200 result=1
+200 result=1
 HANGUP
 `)
 
 // Test AGI environment parsing
-func TestAgiEnv(t *testing.T) {
+func TestParseEnv(t *testing.T) {
+	// Valid environment data
 	a := New()
 	a.buf = bufio.NewReadWriter(
 		bufio.NewReader(bytes.NewReader(env)),
-		nil,
+		bufio.NewWriter(ioutil.Discard),
 	)
 	err := a.parseEnv()
 	if err != nil {
@@ -79,14 +99,25 @@ func TestAgiEnv(t *testing.T) {
 	if a.Env["arg_3"] != "3" {
 		t.Errorf("Error parsing arg3. Expecting: 3, got: %s", a.Env["arg_3"])
 	}
+	// invalid environment data
+	b := New()
+	b.buf = bufio.NewReadWriter(
+		bufio.NewReader(bytes.NewReader(envInv)),
+		bufio.NewWriter(ioutil.Discard),
+	)
+	err = b.parseEnv()
+	if err == nil {
+		t.Fatalf("parseEnv failed to detect invalid input: %v", b.Env)
+	}
 }
 
 // Test AGI repsonse parsing
-func TestRes(t *testing.T) {
+func TestParseRespomse(t *testing.T) {
+	// Valid responses
 	a := New()
 	a.buf = bufio.NewReadWriter(
 		bufio.NewReader(bytes.NewReader(rep)),
-		nil,
+		bufio.NewWriter(ioutil.Discard),
 	)
 	r, err := a.parseResponse()
 	if err != nil {
@@ -109,7 +140,6 @@ func TestRes(t *testing.T) {
 	if r.Dat != "(speech) endpos=1234 results=foo bar" {
 		t.Errorf("Error parsing AGI complex 200 response. Expecting: (speech) endpos=1234 results=foo bar, got: %s", r.Dat)
 	}
-
 	_, err = a.parseResponse()
 	if err == nil {
 		t.Error("No error after parsing AGI 510 response.")
@@ -128,23 +158,29 @@ func TestRes(t *testing.T) {
 	}
 	_, err = a.parseResponse()
 	if err == nil {
+		t.Error("Failed to detect a HANGUP reguest.")
+	}
+	// Invalid responses
+	b := New()
+	b.buf = bufio.NewReadWriter(
+		bufio.NewReader(bytes.NewReader(repInv)),
+		bufio.NewWriter(ioutil.Discard),
+	)
+	_, err = b.parseResponse()
+	if err == nil {
 		t.Error("No error after parsing a partial AGI response.")
 	}
-	_, err = a.parseResponse()
+	_, err = b.parseResponse()
+	if err == nil {
+		t.Error("No error after parsing a malformed AGI response.")
+	}
+	_, err = b.parseResponse()
 	if err == nil {
 		t.Error("No error after parsing an empty AGI response.")
 	}
-	_, err = a.parseResponse()
-	if err == nil {
-		t.Error("No error after parsing an empty AGI response.")
-	}
-	_, err = a.parseResponse()
+	_, err = b.parseResponse()
 	if err == nil {
 		t.Error("No error after parsing an erroneous AGI response.")
-	}
-	_, err = a.parseResponse()
-	if err == nil {
-		t.Error("Failed to detect a HANGUP reguest.")
 	}
 }
 
@@ -165,7 +201,7 @@ func TestCmd(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to initialize new AGI session: %v", err)
 	}
-	r, err = a.GetOption("echo", "any")
+	r, err = a.StreamFile("echo-test", "*#")
 	if err != nil {
 		t.Errorf("Failed to parse AGI responce: %v", err)
 	}
@@ -173,7 +209,7 @@ func TestCmd(t *testing.T) {
 		t.Error("Failed to send AGI command")
 	}
 	str, _ := buf.ReadString(10)
-	if str != "GET OPTION echo \"any\"\n" {
+	if str != "STREAM FILE echo-test \"*#\"\n" {
 		t.Errorf("Failed to sent properly formatted AGI command: %s", str)
 	}
 	if r.Res != 1 {
@@ -209,5 +245,28 @@ func BenchmarkParseRes(b *testing.B) {
 		for k := 0; k < 10; k++ {
 			a.parseResponse()
 		}
+	}
+}
+
+// Benchmark AGI Session
+func BenchmarkSession(b *testing.B) {
+	read := make([]byte, 0, len(env)+len(repVal))
+	read = append(read, env...)
+	read = append(read, repVal...)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		a := New()
+		a.Init(
+			bufio.NewReadWriter(
+				bufio.NewReader(bytes.NewReader(read)),
+				bufio.NewWriter(ioutil.Discard),
+			),
+		)
+		a.Answer()
+		a.Verbose("Hello World")
+		a.StreamFile("echo-test", "1234567890*#")
+		a.Exec("Wait", "3")
+		a.Verbose("Goodbye World")
+		a.Hangup()
 	}
 }

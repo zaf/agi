@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	envMin = 20  // Minimun number of AGI environment args
+	envMin = 18  // Minimun number of AGI environment args
 	envMax = 150 // Maximum number of AGI environment args
 )
 
@@ -223,6 +223,16 @@ func (a *Session) Noop(params ...interface{}) (Reply, error) {
 		cmd = fmt.Sprintf("%s %v", cmd, par)
 	}
 	return a.sendMsg(fmt.Sprintf("NOOP%s", cmd))
+}
+
+// RawCommand sends as user defined command. Use of this is generally discouraged.
+// Useful only for debugging, testing and maybe compatibility with very old versions of asterisk.
+func (a *Session) RawCommand(params ...interface{}) (Reply, error) {
+	var cmd string
+	for _, par := range params {
+		cmd = fmt.Sprintf("%s %v", cmd, par)
+	}
+	return a.sendMsg(cmd)
 }
 
 // ReceiveChar receives one character from channels supporting it. Res contains the decimal value of
@@ -458,9 +468,9 @@ func (a *Session) parseEnv() error {
 		//Strip trailing newline
 		line = line[:len(line)-1]
 		ind := bytes.IndexByte(line, ':')
-		//"agi_type" is the shortest length key, anything shorter is invalid.
-		if ind < len("agi_type") || ind == len(line)-1 {
-			//line doesn't match: /^.{8,}:\s.+\n$/
+		//"agi_type" is the shortest length key, "agi_network_script" the longest, anything ouside these boundaries is invalid.
+		if ind < len("agi_type") || ind > len("agi_network_script") || ind == len(line)-1 {
+			//line doesn't match: /^.{8,18}:.+$/
 			err = fmt.Errorf("malformed environment input: %s", string(line))
 			a.Env = nil
 			return err

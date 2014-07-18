@@ -10,6 +10,7 @@
 // When called directly from the  asterisk dialplan it behaves like an ordinary AGI app.
 // When started on its own outside asterisk it spawns as a FastAGI server and
 // listens for connections on 127.0.0.1:4573
+// This works with asterisk 1.4 and later, earlier versions didn't set any environment vars.
 
 package main
 
