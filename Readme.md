@@ -201,6 +201,15 @@ func (a *Session) Noop(params ...interface{}) (Reply, error)
 ```
 Noop does nothing. Res is always 0.
 
+#### func (*Session) RawCommand
+
+```go
+func (a *Session) RawCommand(params ...interface{}) (Reply, error)
+```
+RawCommand sends as user defined command. Use of this is generally discouraged.
+Useful only for debugging, testing and maybe compatibility with very old
+versions of asterisk.
+
 #### func (*Session) ReceiveChar
 
 ```go
