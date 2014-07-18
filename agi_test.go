@@ -235,14 +235,17 @@ func BenchmarkParseEnv(b *testing.B) {
 
 // Benchmark AGI response parsing
 func BenchmarkParseRes(b *testing.B) {
+	read := make([]byte, 0, len(repVal)+len(rep))
+	read = append(read, repVal...)
+	read = append(read, rep...)
 	a := New()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		a.buf = bufio.NewReadWriter(
-			bufio.NewReader(bytes.NewReader(rep)),
+			bufio.NewReader(bytes.NewReader(read)),
 			nil,
 		)
-		for k := 0; k < 10; k++ {
+		for k := 0; k < 14; k++ {
 			a.parseResponse()
 		}
 	}
