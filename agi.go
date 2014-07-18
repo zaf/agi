@@ -515,7 +515,7 @@ func (a *Session) parseResponse() (Reply, error) {
 	ind := bytes.IndexByte(line, ' ')
 	if ind <= 0 || ind == len(line)-1 {
 		//line doesnt match /^\w+\s.+$/
-		if string(line) == "HANGUP" {
+		if bytes.Equal(line, []byte("HANGUP")) {
 			err = fmt.Errorf("client sent a HANGUP request")
 		} else {
 			err = fmt.Errorf("malformed or partial agi response: %s", string(line))
