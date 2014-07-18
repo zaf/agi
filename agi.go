@@ -154,8 +154,8 @@ func (a *Session) GetData(file string, params ...int) (Reply, error) {
 }
 
 // GetFullVariable evaluates a channel expression, if no channel is specified the current channel is used.
-// Res is 1 if variablename is set and the value is returned in Dat.
-// Understands complex variable names and builtin variables.
+// Res is 1 if variable is set and the value is returned in Dat.
+// Understands complex variable names and build in variables.
 func (a *Session) GetFullVariable(variable string, channel ...string) (Reply, error) {
 	var r Reply
 	var err error
@@ -170,7 +170,7 @@ func (a *Session) GetFullVariable(variable string, channel ...string) (Reply, er
 	return r, err
 }
 
-// GetOption streams file, prompts for DTMF with timeout. Optiona parameter: timeout.
+// GetOption streams file, prompts for DTMF with timeout. Optional parameter: timeout.
 // Res contains the digits received from the channel at the other end and Dat
 // contains the sample ofset. In case of failure to playback Res is -1.
 func (a *Session) GetOption(filename, escape string, timeout ...int) (Reply, error) {
@@ -187,8 +187,8 @@ func (a *Session) GetOption(filename, escape string, timeout ...int) (Reply, err
 	return r, err
 }
 
-// GetVariable gets a channel variable. Res is 0 if variablename is not set,
-// 1 if variablename is set and Dat contains the value.
+// GetVariable gets a channel variable. Res is 0 if variable is not set,
+// 1 if variable is set and Dat contains the value.
 func (a *Session) GetVariable(variable string) (Reply, error) {
 	r, err := a.sendMsg(fmt.Sprintf("GET VARIABLE %s", variable))
 	if r.Dat != "" {
@@ -225,7 +225,7 @@ func (a *Session) Noop(params ...interface{}) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("NOOP%s", cmd))
 }
 
-// RawCommand sends as user defined command. Use of this is generally discouraged.
+// RawCommand sends a user defined command. Use of this is generally discouraged.
 // Useful only for debugging, testing and maybe compatibility with very old versions of asterisk.
 func (a *Session) RawCommand(params ...interface{}) (Reply, error) {
 	var cmd string
@@ -237,13 +237,13 @@ func (a *Session) RawCommand(params ...interface{}) (Reply, error) {
 
 // ReceiveChar receives one character from channels supporting it. Res contains the decimal value of
 // the character if one is received, or 0 if the channel does not support text reception.
-// Result is -1 only on error/hangup.
+// Result is -1 only on error/hang-up.
 func (a *Session) ReceiveChar(timeout int) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("RECEIVE CHAR %d", timeout))
 }
 
 // ReceiveText receives text from channels supporting it. Res is -1 for failure
-// or 1 for success, and Dat conatins the string.
+// or 1 for success, and Dat contains the string.
 func (a *Session) ReceiveText(timeout int) (Reply, error) {
 	r, err := a.sendMsg(fmt.Sprintf("RECEIVE TEXT %d", timeout))
 	if r.Dat != "" {
@@ -270,13 +270,13 @@ func (a *Session) RecordFile(file, format, escape string, timeout int, params ..
 }
 
 // SayAlpha says a given character string. Res is 0 if playback completes without a digit
-// being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hangup.
+// being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hang-up.
 func (a *Session) SayAlpha(str, escape string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SAY ALPHA %s \"%s\"", str, escape))
 }
 
 // SayDate says a given date (Unix time format). Res is 0 if playback completes without a digit
-// being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hangup.
+// being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hang-up.
 func (a *Session) SayDate(date int64, escape string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SAY DATE %d \"%s\"", date, escape))
 }
@@ -285,7 +285,7 @@ func (a *Session) SayDate(date int64, escape string) (Reply, error) {
 // fomrat, the format the time should be said in. See voicemail.conf (defaults to ABdY 'digits/at' IMp).
 // timezone, acceptable values can be found in /usr/share/zoneinfo. Defaults to machine default.
 // Res is 0 if playback completes without a digit being pressed, the ASCII numerical
-// value of the digit if one was pressed or -1 on error/hangup.
+// value of the digit if one was pressed or -1 on error/hang-up.
 func (a *Session) SayDateTime(time int64, escape string, params ...string) (Reply, error) {
 	cmd := fmt.Sprintf("%d \"%s\"", time, escape)
 	for _, par := range params {
@@ -295,13 +295,13 @@ func (a *Session) SayDateTime(time int64, escape string, params ...string) (Repl
 }
 
 // SayDigits says a given digit. Res is 0 if playback completes without a digit being pressed,
-// the ASCII numerical value of the digit if one was pressed or -1 on error/hangup.
+// the ASCII numerical value of the digit if one was pressed or -1 on error/hang-up.
 func (a *Session) SayDigits(digit int, escape string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SAY DIGITS %d \"%s\"", digit, escape))
 }
 
 // SayNumber says a given number. Optional parameter gender. Res is 0 if playback completes
-// without a digit being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hangup.
+// without a digit being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hang-up.
 func (a *Session) SayNumber(num int, escape string, gender ...string) (Reply, error) {
 	if len(gender) > 0 {
 		return a.sendMsg(fmt.Sprintf("SAY NUMBER %d \"%s\" %s", num, escape, gender[0]))
@@ -310,30 +310,30 @@ func (a *Session) SayNumber(num int, escape string, gender ...string) (Reply, er
 }
 
 // SayPhonetic says a given character string with phonetics. Res is 0 if playback completes
-// without a digit pressed, the ASCII numerical value of the digit if one was pressed, or -1 on error/hangup
+// without a digit pressed, the ASCII numerical value of the digit if one was pressed, or -1 on error/hang-up
 func (a *Session) SayPhonetic(str, escape string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SAY PHONETIC %s \"%s\"", str, escape))
 }
 
 // SayTime says a given time (Unix time format). Res is 0 if playback completes without a digit
-// being pressed, or the ASCII numerical value of the digit if one was pressed or -1 on error/hangup.
+// being pressed, or the ASCII numerical value of the digit if one was pressed or -1 on error/hang-up.
 func (a *Session) SayTime(time int64, escape string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SAY TIME %d \"%s\"", time, escape))
 }
 
 // SendImage sends images to channels supporting it. Res is 0 if image is sent, or if the channel
-// does not support image transmission. Result is -1 only on error/hangup. Image names should not include extensions.
+// does not support image transmission. Result is -1 only on error/hang-up. Image names should not include extensions.
 func (a *Session) SendImage(image string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SEND IMAGE %s", image))
 }
 
 // SendText sends text to channels supporting it. Res is 0 if text is sent, or if the channel
-// does not support text transmission. Result is -1 only on error/hangup.
+// does not support text transmission. Result is -1 only on error/hang-up.
 func (a *Session) SendText(text string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SEND TEXT \"%s\"", text))
 }
 
-// SetAutohangup autohangups channel after a number of seconds. Setting time to 0 will cause the autohangup
+// SetAutohangup autohang-ups channel after a number of seconds. Setting time to 0 will cause the autohang-up
 // feature to be disabled on this channel. Res is always 0.
 func (a *Session) SetAutohangup(time int) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SET AUTOHANGUP %d", time))
@@ -354,7 +354,7 @@ func (a *Session) SetExtension(ext string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("SET EXTENSION %s", ext))
 }
 
-// SetMusic enables/disables Music on hold generator by settong opt to "on" or "off".
+// SetMusic enables/disables Music on hold generator by setting opt to "on" or "off".
 // Optional parameter: class, if not specified, then the default music on hold class will be used.
 // Res is always 0.
 func (a *Session) SetMusic(opt string, class ...string) (Reply, error) {
