@@ -157,7 +157,7 @@ func TestParseRespomse(t *testing.T) {
 		t.Error("No error after parsing AGI 520 response containing usage details.")
 	}
 	_, err = a.parseResponse()
-	if err == nil {
+	if err == nil || err.Error() != "HANGUP" {
 		t.Error("Failed to detect a HANGUP reguest.")
 	}
 	// Invalid responses
