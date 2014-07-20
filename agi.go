@@ -537,6 +537,7 @@ func (a *Session) parseResponse() (Reply, error) {
 					err = fmt.Errorf("failed to parse AGI 200 reply: %v", err)
 					r.Res = -99
 				}
+				break
 			} else if spInd > 0 && spInd < len(line)-1 {
 				//line matches /^\w+\s.+$/
 				r.Res, err = strconv.Atoi(string(line[:spInd]))
@@ -546,8 +547,8 @@ func (a *Session) parseResponse() (Reply, error) {
 				}
 				//Strip leading space and save additional returned data.
 				r.Dat = string(line[spInd+1:])
+				break
 			}
-			break
 		}
 		err = fmt.Errorf("malformed 200 response: %s", string(line))
 	case "510":
