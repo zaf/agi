@@ -62,6 +62,8 @@ HANGUP
 
 var repInv = []byte(`200
 200 result 1
+200 result= 1
+200 result=
 
 some random reply that we are not supposed to get
 `)
@@ -169,6 +171,14 @@ func TestParseRespomse(t *testing.T) {
 	_, err = b.parseResponse()
 	if err == nil {
 		t.Error("No error after parsing a partial AGI response.")
+	}
+	_, err = b.parseResponse()
+	if err == nil {
+		t.Error("No error after parsing a malformed AGI response.")
+	}
+	_, err = b.parseResponse()
+	if err == nil {
+		t.Error("No error after parsing a malformed AGI response.")
 	}
 	_, err = b.parseResponse()
 	if err == nil {
