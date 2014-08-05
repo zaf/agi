@@ -10,7 +10,26 @@ All AGI commands are implemented as methods of the Session struct that holds a
 copy of the AGI environment variables. All methods return a Reply struct and the
 AGI error, if any. The Reply struct contains the numeric result of the AGI
 command in Res and if there is any additional data it is stored as string in the
-Dat element of the struct.
+Dat element of the struct. For example, to create a new AGI session and
+initialize it:
+
+    myAgi := agi.New()
+    err := myAgi.Init(nil)
+    if err != nil {
+    	log.Fatal("Error Parsing AGI environment: %v\n", err)
+    }
+
+To play back a voice prompt using AGI Streamfile command:
+
+    rep, err := myAgi.StreamFile("hello-world", "0123456789")
+    if err != nil {
+    	log.Fatal("AGI reply error: %v\n", err)
+    }
+    if rep.Res == -1 {
+    	log.Printf("Error during playback\n")
+    }
+
+For more please see the code snippets in the examples folder.
 
 ## Usage
 
@@ -181,18 +200,6 @@ Init initializes a new AGI session. If rw is nil the AGI session will use
 standard input (stdin) and output (stdout) for a standalone AGI application. It
 reads and stores the AGI environment variables in Env. Returns an error if the
 parsing of the AGI environment was unsuccessful.
-
-For example, we create a new AGI session, initialize it and print the Env
-variables by using:
-
-    myAgi := agi.New()
-    err := myAgi.Init(nil)
-    if err != nil {
-    	log.Fatal("Error Parsing AGI environment: %v\n", err)
-    }
-    for key, value := range myAgi.Env {
-    	log.Printf("%-15s: %s\n", key, value)
-    }
 
 #### func (*Session) Noop
 

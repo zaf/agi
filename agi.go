@@ -3,11 +3,32 @@
 // the BSD 3-Clause License. See the LICENSE file
 // at the top of the source tree.
 
-// Package agi implements the Asterisk Gateway Interface (http://www.asterisk.org). All AGI commands are
-// implemented as methods of the Session struct that holds a copy of the AGI environment variables.
-// All methods return a Reply struct and the AGI error, if any. The Reply struct contains
-// the numeric result of the AGI command in Res and if there is any additional data it is stored
-// as string in the Dat element of the struct.
+/*
+Package agi implements the Asterisk Gateway Interface (http://www.asterisk.org). All AGI commands are
+implemented as methods of the Session struct that holds a copy of the AGI environment variables.
+All methods return a Reply struct and the AGI error, if any. The Reply struct contains
+the numeric result of the AGI command in Res and if there is any additional data it is stored
+as string in the Dat element of the struct.
+For example, to create a new AGI session and initialize it:
+
+	myAgi := agi.New()
+	err := myAgi.Init(nil)
+	if err != nil {
+		log.Fatal("Error Parsing AGI environment: %v\n", err)
+	}
+
+To play back a voice prompt using AGI Streamfile command:
+
+	rep, err := myAgi.StreamFile("hello-world", "0123456789")
+	if err != nil {
+		log.Fatal("AGI reply error: %v\n", err)
+	}
+	if rep.Res == -1 {
+		log.Printf("Error during playback\n")
+	}
+
+For more please see the code snippets in the examples folder.
+*/
 package agi
 
 import (
@@ -46,19 +67,6 @@ func New() *Session {
 // Init initializes a new AGI session. If rw is nil the AGI session will use standard input (stdin)
 // and output (stdout) for a standalone AGI application. It reads and stores the AGI environment
 // variables in Env. Returns an error if the parsing of the AGI environment was unsuccessful.
-//
-// For example, we create a new AGI session, initialize it and print the Env variables
-// by using:
-//
-//	myAgi := agi.New()
-//	err := myAgi.Init(nil)
-//	if err != nil {
-//		log.Fatal("Error Parsing AGI environment: %v\n", err)
-//	}
-//	for key, value := range myAgi.Env {
-//		log.Printf("%-15s: %s\n", key, value)
-//	}
-//
 func (a *Session) Init(rw *bufio.ReadWriter) error {
 	if rw == nil {
 		a.buf = bufio.NewReadWriter(bufio.NewReader(os.Stdin), bufio.NewWriter(os.Stdout))
@@ -91,7 +99,7 @@ func (a *Session) AsyncagiBreak() (Reply, error) {
 //     6 - Line is up.
 //     7 - Line is busy.
 func (a *Session) ChannelStatus(channel ...string) (Reply, error) {
-	if len(channel) > 0 {
+	if channel != nil {
 		return a.sendMsg(fmt.Sprintf("CHANNEL STATUS %s", channel[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("CHANNEL STATUS"))
@@ -116,7 +124,7 @@ func (a *Session) DatabaseDel(family, key string) (Reply, error) {
 
 // DatabaseDelTree removes database keytree/value. Res is 1 if successful, 0 otherwise.
 func (a *Session) DatabaseDelTree(family string, keytree ...string) (Reply, error) {
-	if len(keytree) > 0 {
+	if keytree != nil {
 		return a.sendMsg(fmt.Sprintf("DATABASE DELTREE %s %s", family, keytree[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("DATABASE DELTREE %s", family))
@@ -159,7 +167,7 @@ func (a *Session) GetData(file string, params ...int) (Reply, error) {
 func (a *Session) GetFullVariable(variable string, channel ...string) (Reply, error) {
 	var r Reply
 	var err error
-	if len(channel) > 0 {
+	if channel != nil {
 		r, err = a.sendMsg(fmt.Sprintf("GET FULL VARIABLE %s %s", variable, channel[0]))
 	} else {
 		r, err = a.sendMsg(fmt.Sprintf("GET FULL VARIABLE %s", variable))
@@ -176,7 +184,7 @@ func (a *Session) GetFullVariable(variable string, channel ...string) (Reply, er
 func (a *Session) GetOption(filename, escape string, timeout ...int) (Reply, error) {
 	var r Reply
 	var err error
-	if len(timeout) > 0 {
+	if timeout != nil {
 		r, err = a.sendMsg(fmt.Sprintf("GET OPTION %s \"%s\" %d", filename, escape, timeout[0]))
 	} else {
 		r, err = a.sendMsg(fmt.Sprintf("GET OPTION %s \"%s\"", filename, escape))
@@ -207,12 +215,12 @@ func (a *Session) GoSub(context, extension, priority, args string) (Reply, error
 func (a *Session) Hangup(channel ...string) (Reply, error) {
 	var r Reply
 	var err error
-	if len(channel) > 0 {
+	if channel != nil {
 		r, err = a.sendMsg(fmt.Sprintf("HANGUP %s", channel[0]))
 	} else {
 		r, err = a.sendMsg(fmt.Sprintf("HANGUP"))
 	}
-	a.buf.ReadBytes(10) //Read 'HANGUP' command from asterisk
+	a.buf.ReadBytes(10) // Read 'HANGUP' command from asterisk
 	return r, err
 }
 
@@ -303,7 +311,7 @@ func (a *Session) SayDigits(digit int, escape string) (Reply, error) {
 // SayNumber says a given number. Optional parameter gender. Res is 0 if playback completes
 // without a digit being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hang-up.
 func (a *Session) SayNumber(num int, escape string, gender ...string) (Reply, error) {
-	if len(gender) > 0 {
+	if gender != nil {
 		return a.sendMsg(fmt.Sprintf("SAY NUMBER %d \"%s\" %s", num, escape, gender[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("SAY NUMBER %d \"%s\"", num, escape))
@@ -358,7 +366,7 @@ func (a *Session) SetExtension(ext string) (Reply, error) {
 // Optional parameter: class, if not specified, then the default music on hold class will be used.
 // Res is always 0.
 func (a *Session) SetMusic(opt string, class ...string) (Reply, error) {
-	if len(class) > 0 {
+	if class != nil {
 		return a.sendMsg(fmt.Sprintf("SET MUSIC %s %s", opt, class[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("SET MUSIC %s", opt))
@@ -425,7 +433,7 @@ func (a *Session) SpeechUnloadGrammar(grammar string) (Reply, error) {
 func (a *Session) StreamFile(file, escape string, offset ...int) (Reply, error) {
 	var r Reply
 	var err error
-	if len(offset) > 0 {
+	if offset != nil {
 		r, err = a.sendMsg(fmt.Sprintf("STREAM FILE %s \"%s\" %d", file, escape, offset[0]))
 	} else {
 		r, err = a.sendMsg(fmt.Sprintf("STREAM FILE %s \"%s\"", file, escape))
@@ -444,7 +452,7 @@ func (a *Session) TddMode(mode string) (Reply, error) {
 // Verbose logs a message to the asterisk verbose log.
 // Optional variable: level, the verbose level (1-4). Res is always 1.
 func (a *Session) Verbose(msg string, level ...int) (Reply, error) {
-	if len(level) > 0 {
+	if level != nil {
 		return a.sendMsg(fmt.Sprintf("VERBOSE \"%s\" %d", msg, level[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("VERBOSE \"%s\"", msg))
@@ -465,19 +473,16 @@ func (a *Session) parseEnv() error {
 		if err != nil || len(line) <= len("\r\n") {
 			break
 		}
-		//Strip trailing newline
+		// Strip trailing newline
 		line = line[:len(line)-1]
 		ind := bytes.IndexByte(line, ':')
-		//"agi_type" is the shortest length key, "agi_network_script" the longest, anything ouside these boundaries is invalid.
+		// "agi_type" is the shortest length key, "agi_network_script" the longest, anything ouside these boundaries is invalid.
 		if ind < len("agi_type") || ind > len("agi_network_script") || ind == len(line)-1 {
-			//line doesn't match: /^.{8,18}:.+$/
 			err = fmt.Errorf("malformed environment input: %s", string(line))
 			a.Env = nil
 			return err
 		}
-		//Strip 'agi_' prefix from key.
 		key := string(line[len("agi_"):ind])
-		//Strip leading colon and space from value.
 		ind += len(": ")
 		value := string(line[ind:])
 		a.Env[key] = value
@@ -510,11 +515,11 @@ func (a *Session) parseResponse() (Reply, error) {
 	if err != nil {
 		return r, err
 	}
-	//Strip trailing newline
+	// Strip trailing newline
 	line = line[:len(line)-1]
 	ind := bytes.IndexByte(line, ' ')
 	if ind <= 0 || ind == len(line)-1 {
-		//line doesnt match /^\w+\s.+$/
+		// Line doesnt match /^\w+\s.+$/
 		if bytes.Equal(line, []byte("HANGUP")) {
 			err = fmt.Errorf("HANGUP")
 		} else {
@@ -525,13 +530,12 @@ func (a *Session) parseResponse() (Reply, error) {
 	switch string(line[:ind]) {
 	case "200":
 		eqInd := bytes.IndexByte(line, '=')
-		//Check if line matches /^200\s\w{7}=.*$/
 		if eqInd == len("200 result") && eqInd < len(line)-1 {
-			//Strip the "200 result=" prefix.
+			// If line matches /^200\s\w{7}=.*$/ strip the "200 result=" prefix.
 			line = line[eqInd+1:]
 			spInd := bytes.IndexByte(line, ' ')
 			if spInd < 0 {
-				//line matches /^\w$/
+				// Line matches /^\w$/
 				r.Res, err = strconv.Atoi(string(line))
 				if err != nil {
 					err = fmt.Errorf("failed to parse AGI 200 reply: %v", err)
@@ -539,13 +543,13 @@ func (a *Session) parseResponse() (Reply, error) {
 				}
 				break
 			} else if spInd > 0 && spInd < len(line)-1 {
-				//line matches /^\w+\s.+$/
+				// Line matches /^\w+\s.+$/
 				r.Res, err = strconv.Atoi(string(line[:spInd]))
 				if err != nil {
 					err = fmt.Errorf("failed to parse AGI 200 reply: %v", err)
 					r.Res = -99
 				}
-				//Strip leading space and save additional returned data.
+				// Strip leading space and save additional returned data.
 				r.Dat = string(line[spInd+1:])
 				break
 			}
@@ -559,7 +563,7 @@ func (a *Session) parseResponse() (Reply, error) {
 		err = fmt.Errorf("invalid command syntax")
 	case "520-Invalid":
 		err = fmt.Errorf("invalid command syntax")
-		a.buf.ReadBytes(10) //Read Command syntax doc.
+		a.buf.ReadBytes(10)	// Read Command syntax doc.
 	default:
 		err = fmt.Errorf("malformed or partial agi response: %s", string(line))
 	}
