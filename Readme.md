@@ -16,14 +16,14 @@ initialize it:
     myAgi := agi.New()
     err := myAgi.Init(nil)
     if err != nil {
-    	log.Fatal("Error Parsing AGI environment: %v\n", err)
+    	log.Fatalf("Error Parsing AGI environment: %v\n", err)
     }
 
-To play back a voice prompt using AGI Streamfile command:
+To play back a voice prompt using AGI 'Stream file' command:
 
     rep, err := myAgi.StreamFile("hello-world", "0123456789")
     if err != nil {
-    	log.Fatal("AGI reply error: %v\n", err)
+    	log.Fatalf("AGI reply error: %v\n", err)
     }
     if rep.Res == -1 {
     	log.Printf("Error during playback\n")

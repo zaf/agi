@@ -20,8 +20,7 @@ func main() {
 	myAgi := agi.New()
 	err := myAgi.Init(nil)
 	if err != nil {
-		log.Printf("Error Parsing AGI environment: %v\n", err)
-		return
+		log.Fatalf("Error Parsing AGI environment: %v\n", err)
 	}
 	if debug {
 		// Print to stderr all AGI environment variables that are stored in myAgi.Env map.
@@ -33,8 +32,7 @@ func main() {
 	// Print a message on the asterisk console using Verbose. AGI return values are stored in rep, an agi.Reply struct.
 	rep, err := myAgi.Verbose("Hello World")
 	if err != nil {
-		log.Printf("AGI reply error: %v\n", err)
-		return
+		log.Fatalf("AGI reply error: %v\n", err)
 	}
 	if debug {
 		// Print to stderr the AGI return values. In this case rep.Res is always 1 and rep.Dat is empty.

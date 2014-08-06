@@ -22,8 +22,7 @@ func main() {
 	myAgi := agi.New()
 	err := myAgi.Init(nil)
 	if err != nil {
-		log.Printf("Error Parsing AGI environment: %v\n", err)
-		return
+		log.Fatalf("Error Parsing AGI environment: %v\n", err)
 	}
 	if debug {
 		// Print to stderr all AGI environment variables that are stored in myAgi.Env map.
@@ -42,22 +41,19 @@ func main() {
 	// Chech channel status.
 	rep, err = myAgi.ChannelStatus()
 	if err != nil {
-		log.Printf("AGI reply error: %v\n", err)
-		return
+		log.Fatalf("AGI reply error: %v\n", err)
 	}
 	// Answer channel if not already answered.
 	if rep.Res != 6 {
 		rep, err = myAgi.Answer()
 		if err != nil || rep.Res == -1 {
-			log.Printf("Failed to answer channel: %v\n", err)
-			return
+			log.Fatalf("Failed to answer channel: %v\n", err)
 		}
 	}
 	// Playback file
 	rep, err = myAgi.StreamFile(file, "1234567890*#")
 	if err != nil {
-		log.Printf("AGI reply error: %v\n", err)
-		return
+		log.Fatalf("AGI reply error: %v\n", err)
 	}
 	if rep.Res == -1 {
 		log.Printf("Error playing back file: %s\n", file)
