@@ -9,6 +9,9 @@ package main
 
 import (
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/zaf/agi"
 )
@@ -31,6 +34,11 @@ func main() {
 			log.Printf("%-15s: %s\n", key, value)
 		}
 	}
+	// Handle Hangup from the asterisk server
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGHUP)
+	go handleHangup(sigChan)
+
 	// Check passed arguments. The filename of the file to be played back is supposed to be passed
 	// as the first argument to the AGI script.
 	if myAgi.Env["arg_1"] == "" {
@@ -61,4 +69,10 @@ func main() {
 
 HANGUP:
 	myAgi.Hangup()
+}
+
+func handleHangup(sch <-chan os.Signal) {
+	signal := <-sch
+	log.Printf("Received %v, exiting...\n", signal)
+	os.Exit(1)
 }

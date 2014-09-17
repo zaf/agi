@@ -38,6 +38,4 @@ func main() {
 		// Print to stderr the AGI return values. In this case rep.Res is always 1 and rep.Dat is empty.
 		log.Printf("AGI command returned: %d %s\n", rep.Res, rep.Dat)
 	}
-	// Hangup
-	myAgi.Hangup()
 }
