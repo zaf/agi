@@ -71,21 +71,21 @@ func main() {
 }
 
 func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
-	// Create a new AGI session
-	myAgi := agi.New()
-	rw := bufio.NewReadWriter(bufio.NewReader(client), bufio.NewWriter(client))
-	err := myAgi.Init(rw)
 	defer func() {
+		if err := recover(); err != nil {
+			log.Println("Session terminated:", err)
+		}
 		if *debug {
 			log.Printf("Closing connection from %v", client.RemoteAddr())
 		}
 		client.Close()
 		wg.Done()
 	}()
-	if err != nil {
-		log.Printf("Error Parsing AGI environment: %v\n", err)
-		return
-	}
+	// Create a new AGI session
+	myAgi := agi.New()
+	rw := bufio.NewReadWriter(bufio.NewReader(client), bufio.NewWriter(client))
+	err := myAgi.Init(rw)
+	checkErr(err)
 	var file string
 	var rep agi.Reply
 	if *debug {
@@ -106,24 +106,15 @@ func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 	file = query["file"][0]
 	// Chech channel status
 	rep, err = myAgi.ChannelStatus()
-	if err != nil {
-		log.Printf("AGI reply error: %v\n", err)
-		return
-	}
+	checkErr(err)
 	// Answer channel if not already answered
 	if rep.Res != 6 {
 		rep, err = myAgi.Answer()
-		if err != nil || rep.Res == -1 {
-			log.Printf("Failed to answer channel: %v\n", err)
-			return
-		}
+		checkErr(err)
 	}
 	// Playback file
 	rep, err = myAgi.StreamFile(file, "1234567890#*")
-	if err != nil {
-		log.Printf("AGI reply error: %v\n", err)
-		return
-	}
+	checkErr(err)
 	if rep.Res == -1 {
 		log.Printf("Failed to playback file: %s\n", file)
 	}
@@ -137,4 +128,14 @@ func parseAgiReq(request string) (string, url.Values) {
 	req, _ := url.Parse(request)
 	query, _ := url.ParseQuery(req.RawQuery)
 	return req.Path, query
+}
+
+//Check for AGI Protocol errors or hangups
+func checkErr(e error) {
+	if e != nil {
+		if e.Error() == "HANGUP" {
+			panic("Client Hangup")
+		}
+		panic("AGI error: " + e.Error())
+	}
 }

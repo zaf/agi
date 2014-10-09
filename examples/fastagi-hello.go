@@ -35,15 +35,17 @@ func main() {
 }
 
 func connHandle(c net.Conn) {
-	defer c.Close()
+	defer func() {
+		c.Close()
+		if err := recover(); err != nil {
+			log.Println("Session terminated:", err)
+		}
+	}()
 	// Create a new FastAGI session and Parse the AGI environment.
 	myAgi := agi.New()
 	rw := bufio.NewReadWriter(bufio.NewReader(c), bufio.NewWriter(c))
 	err := myAgi.Init(rw)
-	if err != nil {
-		log.Printf("Error Parsing AGI environment: %v\n", err)
-		return
-	}
+	checkErr(err)
 	if debug {
 		// Print to stderr all AGI environment variables that are stored in myAgi.Env map.
 		log.Println("AGI environment vars:")
@@ -53,13 +55,17 @@ func connHandle(c net.Conn) {
 	}
 	// Print a message on the asterisk console using Verbose. AGI return values are stored in rep, an agi.Reply struct.
 	rep, err := myAgi.Verbose("Hello World")
-	if err != nil {
-		log.Printf("AGI reply error: %v\n", err)
-		return
-	}
+	checkErr(err)
 	if debug {
 		// Print to stderr the AGI return values. In this case rep.Res is always 1 and rep.Dat is empty.
 		log.Printf("AGI command returned: %d %s\n", rep.Res, rep.Dat)
 	}
 	return
+}
+
+//Check for AGI Protocol errors or hangups
+func checkErr(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
