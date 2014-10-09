@@ -111,6 +111,10 @@ func agiConnHandle(client net.Conn, wg *sync.WaitGroup) {
 	if rep.Res != 6 {
 		rep, err = myAgi.Answer()
 		checkErr(err)
+		if rep.Res == -1 {
+			log.Printf("Failed to answer channel\n")
+			return
+		}
 	}
 	// Playback file
 	rep, err = myAgi.StreamFile(file, "1234567890#*")
