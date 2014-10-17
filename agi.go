@@ -220,7 +220,7 @@ func (a *Session) Hangup(channel ...string) (Reply, error) {
 	} else {
 		r, err = a.sendMsg(fmt.Sprintf("HANGUP"))
 	}
-	a.buf.ReadBytes(10) // Read 'HANGUP' command from asterisk
+	//a.buf.ReadBytes(10) // Read 'HANGUP' command from asterisk
 	return r, err
 }
 
