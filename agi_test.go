@@ -219,7 +219,7 @@ func TestCmd(t *testing.T) {
 		t.Error("Failed to send AGI command")
 	}
 	str, _ := buf.ReadString(10)
-	if str != "STREAM FILE echo-test \"*#\"\n" {
+	if str != "STREAM FILE \"echo-test\" \"*#\"\n" {
 		t.Errorf("Failed to sent properly formatted AGI command: %s", str)
 	}
 	if r.Res != 1 {
