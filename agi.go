@@ -33,16 +33,9 @@ package agi
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
-)
-
-const (
-	envMin = 18  // Minimun number of AGI environment args
-	envMax = 150 // Maximum number of AGI environment args
 )
 
 // Session is a struct holding AGI environment vars and the I/O handlers.
@@ -100,7 +93,7 @@ func (a *Session) AsyncagiBreak() (Reply, error) {
 //     7 - Line is busy.
 func (a *Session) ChannelStatus(channel ...string) (Reply, error) {
 	if channel != nil {
-		return a.sendMsg(fmt.Sprintf("CHANNEL STATUS %s", channel[0]))
+		return a.sendMsg(fmt.Sprintf("CHANNEL STATUS \"%s\"", channel[0]))
 	}
 	return a.sendMsg(fmt.Sprintf("CHANNEL STATUS"))
 }
@@ -127,7 +120,7 @@ func (a *Session) DatabaseDelTree(family string, keytree ...string) (Reply, erro
 	if keytree != nil {
 		return a.sendMsg(fmt.Sprintf("DATABASE DELTREE \"%s\" \"%s\"", family, keytree[0]))
 	}
-	return a.sendMsg(fmt.Sprintf("DATABASE DELTREE %s", family))
+	return a.sendMsg(fmt.Sprintf("DATABASE DELTREE \"%s\"", family))
 }
 
 // DatabaseGet gets database value. Res is 0 if key is not set, 1 if key is set
@@ -155,11 +148,11 @@ func (a *Session) Exec(app, options string) (Reply, error) {
 // GetData prompts for DTMF on a channel. Optional parameters: timeout, maxdigits.
 // Res contains the digits received from the channel at the other end.
 func (a *Session) GetData(file string, params ...int) (Reply, error) {
-	cmd := file
+	cmd := "\""+file+"\""
 	for _, par := range params {
-		cmd = fmt.Sprintf("%s %d", cmd, par)
+		cmd = fmt.Sprintf("%s \"%d\"", cmd, par)
 	}
-	return a.sendMsg(fmt.Sprintf("GET DATA \"%s\"", cmd))
+	return a.sendMsg(fmt.Sprintf("GET DATA %s", cmd))
 }
 
 // GetFullVariable evaluates a channel expression, if no channel is specified the current channel is used.
@@ -219,7 +212,7 @@ func (a *Session) Hangup(channel ...string) (Reply, error) {
 	var r Reply
 	var err error
 	if channel != nil {
-		r, err = a.sendMsg(fmt.Sprintf("HANGUP %s", channel[0]))
+		r, err = a.sendMsg(fmt.Sprintf("HANGUP \"%s\"", channel[0]))
 	} else {
 		r, err = a.sendMsg(fmt.Sprintf("HANGUP"))
 	}
@@ -233,11 +226,12 @@ func (a *Session) Noop(params ...interface{}) (Reply, error) {
 	for _, par := range params {
 		cmd = fmt.Sprintf("%s \"%v\"", cmd, par)
 	}
-	return a.sendMsg(fmt.Sprintf("NOOP%s", cmd))
+	return a.sendMsg(fmt.Sprintf("NOOP %s", cmd))
 }
 
 // RawCommand sends a user defined command. Use of this is generally discouraged.
-// Useful only for debugging, testing and maybe compatibility with very old versions of asterisk.
+// Useful only for debugging, testing and maybe compatibility with newer/altered versions of the AGI
+// protocol. Command strings are passed unescaped.
 func (a *Session) RawCommand(params ...interface{}) (Reply, error) {
 	var cmd string
 	for _, par := range params {
@@ -256,7 +250,7 @@ func (a *Session) ReceiveChar(timeout int) (Reply, error) {
 // ReceiveText receives text from channels supporting it. Res is -1 for failure
 // or 1 for success, and Dat contains the string.
 func (a *Session) ReceiveText(timeout int) (Reply, error) {
-	r, err := a.sendMsg(fmt.Sprintf("RECEIVE TEXT %d", timeout))
+	r, err := a.sendMsg(fmt.Sprintf("RECEIVE TEXT \"%d\"", timeout))
 	if r.Dat != "" {
 		r.Dat = strings.TrimPrefix(r.Dat, "(")
 		r.Dat = strings.TrimSuffix(r.Dat, ")")
@@ -290,7 +284,7 @@ func (a *Session) SayAlpha(str, escape string) (Reply, error) {
 // SayDate says a given date (Unix time format). Res is 0 if playback completes without a digit
 // being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hang-up.
 func (a *Session) SayDate(date int64, escape string) (Reply, error) {
-	return a.sendMsg(fmt.Sprintf("SAY DATE %d \"%s\"", date, escape))
+	return a.sendMsg(fmt.Sprintf("SAY DATE \"%d\" \"%s\"", date, escape))
 }
 
 // SayDateTime says a given time (Unix time format). Optional parameters:
@@ -299,7 +293,7 @@ func (a *Session) SayDate(date int64, escape string) (Reply, error) {
 // Res is 0 if playback completes without a digit being pressed, the ASCII numerical
 // value of the digit if one was pressed or -1 on error/hang-up.
 func (a *Session) SayDateTime(time int64, escape string, params ...string) (Reply, error) {
-	cmd := fmt.Sprintf("%d \"%s\"", time, escape)
+	cmd := fmt.Sprintf("\"%d\" \"%s\"", time, escape)
 	for _, par := range params {
 		cmd = fmt.Sprintf("%s \"%v\"", cmd, par)
 	}
@@ -309,16 +303,16 @@ func (a *Session) SayDateTime(time int64, escape string, params ...string) (Repl
 // SayDigits says a given digit. Res is 0 if playback completes without a digit being pressed,
 // the ASCII numerical value of the digit if one was pressed or -1 on error/hang-up.
 func (a *Session) SayDigits(digit int, escape string) (Reply, error) {
-	return a.sendMsg(fmt.Sprintf("SAY DIGITS %d \"%s\"", digit, escape))
+	return a.sendMsg(fmt.Sprintf("SAY DIGITS \"%d\" \"%s\"", digit, escape))
 }
 
 // SayNumber says a given number. Optional parameter gender. Res is 0 if playback completes
 // without a digit being pressed, the ASCII numerical value of the digit if one was pressed or -1 on error/hang-up.
 func (a *Session) SayNumber(num int, escape string, gender ...string) (Reply, error) {
 	if gender != nil {
-		return a.sendMsg(fmt.Sprintf("SAY NUMBER %d \"%s\" \"%s\"", num, escape, gender[0]))
+		return a.sendMsg(fmt.Sprintf("SAY NUMBER \"%d\" \"%s\" \"%s\"", num, escape, gender[0]))
 	}
-	return a.sendMsg(fmt.Sprintf("SAY NUMBER %d \"%s\"", num, escape))
+	return a.sendMsg(fmt.Sprintf("SAY NUMBER \"%d\" \"%s\"", num, escape))
 }
 
 // SayPhonetic says a given character string with phonetics. Res is 0 if playback completes
@@ -330,7 +324,7 @@ func (a *Session) SayPhonetic(str, escape string) (Reply, error) {
 // SayTime says a given time (Unix time format). Res is 0 if playback completes without a digit
 // being pressed, or the ASCII numerical value of the digit if one was pressed or -1 on error/hang-up.
 func (a *Session) SayTime(time int64, escape string) (Reply, error) {
-	return a.sendMsg(fmt.Sprintf("SAY TIME %d \"%s\"", time, escape))
+	return a.sendMsg(fmt.Sprintf("SAY TIME \"%d\" \"%s\"", time, escape))
 }
 
 // SendImage sends images to channels supporting it. Res is 0 if image is sent, or if the channel
@@ -348,7 +342,7 @@ func (a *Session) SendText(text string) (Reply, error) {
 // SetAutohangup autohang-ups channel after a number of seconds. Setting time to 0 will cause the autohang-up
 // feature to be disabled on this channel. Res is always 0.
 func (a *Session) SetAutohangup(time int) (Reply, error) {
-	return a.sendMsg(fmt.Sprintf("SET AUTOHANGUP %d", time))
+	return a.sendMsg(fmt.Sprintf("SET AUTOHANGUP \"%d\"", time))
 }
 
 // SetCallerid sets callerid for the current channel. Res is always 1.
@@ -373,7 +367,7 @@ func (a *Session) SetMusic(opt string, class ...string) (Reply, error) {
 	if class != nil {
 		return a.sendMsg(fmt.Sprintf("SET MUSIC \"%s\" \"%s\"", opt, class[0]))
 	}
-	return a.sendMsg(fmt.Sprintf("SET MUSIC %s", opt))
+	return a.sendMsg(fmt.Sprintf("SET MUSIC \"%s\"", opt))
 }
 
 // SetPriority sets channel dialplan priority. The priority must be a valid priority or label.
@@ -438,7 +432,7 @@ func (a *Session) StreamFile(file, escape string, offset ...int) (Reply, error) 
 	var r Reply
 	var err error
 	if offset != nil {
-		r, err = a.sendMsg(fmt.Sprintf("STREAM FILE \"%s\" \"%s\" %d", file, escape, offset[0]))
+		r, err = a.sendMsg(fmt.Sprintf("STREAM FILE \"%s\" \"%s\" \"%d\"", file, escape, offset[0]))
 	} else {
 		r, err = a.sendMsg(fmt.Sprintf("STREAM FILE \"%s\" \"%s\"", file, escape))
 	}
@@ -467,111 +461,4 @@ func (a *Session) Verbose(msg string, level ...int) (Reply, error) {
 // in the timeout, or the ASCII numerical value of the digit if one is received.
 func (a *Session) WaitForDigit(timeout int) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("WAIT FOR DIGIT %d", timeout))
-}
-
-// parseEnv reads and stores AGI environment.
-func (a *Session) parseEnv() error {
-	var err error
-	for i := 0; i <= envMax; i++ {
-		line, err := a.buf.ReadBytes(10)
-		if err != nil || len(line) <= len("\r\n") {
-			break
-		}
-		// Strip trailing newline
-		line = line[:len(line)-1]
-		ind := bytes.IndexByte(line, ':')
-		// "agi_type" is the shortest length key, "agi_network_script" the longest, anything ouside these boundaries is invalid.
-		if ind < len("agi_type") || ind > len("agi_network_script") || ind == len(line)-1 {
-			err = fmt.Errorf("malformed environment input: %s", string(line))
-			a.Env = nil
-			return err
-		}
-		key := string(line[len("agi_"):ind])
-		ind += len(": ")
-		value := string(line[ind:])
-		a.Env[key] = value
-	}
-	if len(a.Env) < envMin {
-		err = fmt.Errorf("incomplete environment with only %d env vars", len(a.Env))
-		a.Env = nil
-	}
-	return err
-}
-
-// sendMsg sends an AGI command and returns the result. In case of error Reply.Res is set to -99
-// for people that wont bother doing proper error checking. :(
-func (a *Session) sendMsg(s string) (Reply, error) {
-	s = strings.TrimSpace(s)
-	s = strings.Replace(s, "\r", " ", -1)
-	s = strings.Replace(s, "\n", " ", -1)
-	if _, err := fmt.Fprintln(a.buf, s); err != nil {
-		return Reply{-99, ""}, err
-	}
-	if err := a.buf.Flush(); err != nil {
-		return Reply{-99, ""}, err
-	}
-	return a.parseResponse()
-}
-
-// parseResponse reads back and parses AGI repsonse. Returns the Reply and the protocol error, if any.
-// In case of error Res is again set to -99 for the aforementioned reason.
-func (a *Session) parseResponse() (Reply, error) {
-	r := Reply{-99, ""}
-	line, err := a.buf.ReadBytes(10)
-	if err != nil {
-		return r, err
-	}
-	// Strip trailing newline
-	line = line[:len(line)-1]
-	ind := bytes.IndexByte(line, ' ')
-	if ind <= 0 || ind == len(line)-1 {
-		// Line doesnt match /^\w+\s.+$/
-		if bytes.Equal(line, []byte("HANGUP")) {
-			err = fmt.Errorf("HANGUP")
-		} else {
-			err = fmt.Errorf("malformed or partial agi response: %s", string(line))
-		}
-		return r, err
-	}
-	switch string(line[:ind]) {
-	case "200":
-		eqInd := bytes.IndexByte(line, '=')
-		if eqInd == len("200 result") && eqInd < len(line)-1 {
-			// If line matches /^200\s\w{7}=.*$/ strip the "200 result=" prefix.
-			line = line[eqInd+1:]
-			spInd := bytes.IndexByte(line, ' ')
-			if spInd < 0 {
-				// Line matches /^\w$/
-				r.Res, err = strconv.Atoi(string(line))
-				if err != nil {
-					err = fmt.Errorf("failed to parse AGI 200 reply: %v", err)
-					r.Res = -99
-				}
-				break
-			} else if spInd > 0 && spInd < len(line)-1 {
-				// Line matches /^\w+\s.+$/
-				r.Res, err = strconv.Atoi(string(line[:spInd]))
-				if err != nil {
-					err = fmt.Errorf("failed to parse AGI 200 reply: %v", err)
-					r.Res = -99
-				}
-				// Strip leading space and save additional returned data.
-				r.Dat = string(line[spInd+1:])
-				break
-			}
-		}
-		err = fmt.Errorf("malformed 200 response: %s", string(line))
-	case "510":
-		err = fmt.Errorf("invalid or unknown command")
-	case "511":
-		err = fmt.Errorf("command not permitted on a dead channel")
-	case "520":
-		err = fmt.Errorf("invalid command syntax")
-	case "520-Invalid":
-		err = fmt.Errorf("invalid command syntax")
-		a.buf.ReadBytes(10) // Read Command syntax doc.
-	default:
-		err = fmt.Errorf("malformed or partial agi response: %s", string(line))
-	}
-	return r, err
 }
