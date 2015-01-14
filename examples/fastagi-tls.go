@@ -18,20 +18,21 @@ import (
 )
 
 const (
-	debug = false
-	cert  = "public.crt"
-	key   = "secret.key"
+	debug  = false
+	listen = "0.0.0.0:4574"
+	cert   = "public.crt"
+	key    = "secret.key"
 )
 
 func main() {
-	// Create a listener on port 4574 and start a new goroutine for each connection.
+	// Create a TLS listener on port 4574 and start a new goroutine for each connection.
 	tlsCert, err := tls.LoadX509KeyPair(cert, key)
 	if err != nil {
 		log.Fatal(err)
 	}
-	tlsConf := tls.Config{Certificates: []tls.Certificate{tlsCert}}
+	tlsConf := tls.Config{Certificates: []tls.Certificate{tlsCert}, MinVersion: tls.VersionTLS10}
 	tlsConf.Rand = rand.Reader
-	tlsLn, err := tls.Listen("tcp", ":4574", &tlsConf)
+	tlsLn, err := tls.Listen("tcp", listen, &tlsConf)
 	if err != nil {
 		log.Fatal(err)
 	}
