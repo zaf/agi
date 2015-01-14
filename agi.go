@@ -148,7 +148,7 @@ func (a *Session) Exec(app, options string) (Reply, error) {
 // GetData prompts for DTMF on a channel. Optional parameters: timeout, maxdigits.
 // Res contains the digits received from the channel at the other end.
 func (a *Session) GetData(file string, params ...int) (Reply, error) {
-	cmd := "\""+file+"\""
+	cmd := "\"" + file + "\""
 	for _, par := range params {
 		cmd = fmt.Sprintf("%s \"%d\"", cmd, par)
 	}
