@@ -9,7 +9,6 @@ package main
 
 import (
 	"bufio"
-	"crypto/rand"
 	"crypto/tls"
 	"log"
 	"net"
@@ -31,7 +30,6 @@ func main() {
 		log.Fatal(err)
 	}
 	tlsConf := tls.Config{Certificates: []tls.Certificate{tlsCert}, MinVersion: tls.VersionTLS10}
-	tlsConf.Rand = rand.Reader
 	tlsLn, err := tls.Listen("tcp", listen, &tlsConf)
 	if err != nil {
 		log.Fatal(err)
