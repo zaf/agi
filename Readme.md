@@ -13,21 +13,25 @@ command in Res and if there is any additional data it is stored as string in the
 Dat element of the struct. For example, to create a new AGI session and
 initialize it:
 
-    myAgi := agi.New()
-    err := myAgi.Init(nil)
-    if err != nil {
-    	log.Fatalf("Error Parsing AGI environment: %v\n", err)
-    }
+```go
+myAgi := agi.New()
+err := myAgi.Init(nil)
+if err != nil {
+	log.Fatalf("Error Parsing AGI environment: %v\n", err)
+}
+```
 
 To play back a voice prompt using AGI 'Stream file' command:
 
-    rep, err := myAgi.StreamFile("hello-world", "0123456789")
-    if err != nil {
-    	log.Fatalf("AGI reply error: %v\n", err)
-    }
-    if rep.Res == -1 {
-    	log.Printf("Error during playback\n")
-    }
+```go
+rep, err := myAgi.StreamFile("hello-world", "0123456789")
+if err != nil {
+	log.Fatalf("AGI reply error: %v\n", err)
+}
+if rep.Res == -1 {
+	log.Printf("Error during playback\n")
+}
+```
 
 For more please see the code snippets in the examples folder.
 
