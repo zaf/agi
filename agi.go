@@ -145,6 +145,11 @@ func (a *Session) Exec(app, options string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("EXEC \"%s\" \"%s\"", app, options))
 }
 
+// Failure causes the AGISTATUS channel variable in asterisk to be set to 'FAILURE'.
+func (a *Session) Failure() (Reply, error) {
+	return a.sendMsg("FAILURE")
+}
+
 // GetData prompts for DTMF on a channel. Optional parameters: timeout, maxdigits.
 // Res contains the digits received from the channel at the other end.
 func (a *Session) GetData(file string, params ...int) (Reply, error) {
