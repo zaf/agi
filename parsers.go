@@ -50,6 +50,11 @@ func (a *Session) parseEnv() error {
 
 // sendMsg sends an AGI command and returns the result.
 func (a *Session) sendMsg(s string) (Reply, error) {
+	// Make sure there wasn't any data received, usually a HANGUP request from asterisk.
+	if i := a.buf.Reader.Buffered(); i != 0 {
+		line, _ := a.buf.ReadBytes(10)
+		return Reply{}, fmt.Errorf(string(line[:len(line)-1]))
+	}
 	s = strings.Replace(s, "\r", " ", -1)
 	s = strings.Replace(s, "\n", " ", -1)
 	//s = strings.Replace(s, "\"", "\\\\\\\"", -1)

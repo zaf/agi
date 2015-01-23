@@ -145,7 +145,7 @@ func (a *Session) Exec(app, options string) (Reply, error) {
 	return a.sendMsg(fmt.Sprintf("EXEC \"%s\" \"%s\"", app, options))
 }
 
-// Failure causes the AGISTATUS channel variable in asterisk to be set to 'FAILURE'.
+// Failure causes asterisk to terminate the AGI session and set the AGISTATUS channel variable to 'FAILURE'.
 func (a *Session) Failure() (Reply, error) {
 	return a.sendMsg("FAILURE")
 }
