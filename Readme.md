@@ -1,8 +1,5 @@
 # agi
 --
-
-#### To install: go get github.com/zaf/agi
-
     import "github.com/zaf/agi"
 
 Package agi implements the Asterisk Gateway Interface (http://www.asterisk.org).
@@ -145,6 +142,14 @@ func (a *Session) Exec(app, options string) (Reply, error)
 Exec executes a given application. Res contains whatever the dialplan
 application returns, or -2 on failure to find the application.
 
+#### func (*Session) Failure
+
+```go
+func (a *Session) Failure() (Reply, error)
+```
+Failure causes asterisk to terminate the AGI session and set the AGISTATUS
+channel variable to 'FAILURE'.
+
 #### func (*Session) GetData
 
 ```go
@@ -218,8 +223,8 @@ Noop does nothing. Res is always 0.
 func (a *Session) RawCommand(params ...interface{}) (Reply, error)
 ```
 RawCommand sends a user defined command. Use of this is generally discouraged.
-Useful only for debugging, testing and maybe compatibility with very old
-versions of asterisk.
+Useful only for debugging, testing and maybe compatibility with newer/altered
+versions of the AGI protocol. Command strings are passed unescaped.
 
 #### func (*Session) ReceiveChar
 
