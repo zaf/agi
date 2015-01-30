@@ -8,7 +8,6 @@ package agi
 import (
 	"bufio"
 	"bytes"
-	"io"
 	"io/ioutil"
 	"testing"
 )
@@ -194,41 +193,41 @@ func TestParseRespomse(t *testing.T) {
 	}
 }
 
-// Test the generation of AGI commands
-func TestCmd(t *testing.T) {
-	var r Reply
-	var b []byte
-	buf := bytes.NewBuffer(b)
-	a := New()
-	data := append(env, "200 result=1 endpos=1234\n"...)
-	err := a.Init(
-		bufio.NewReadWriter(
-			bufio.NewReader(bytes.NewReader(data)),
-			bufio.NewWriter(io.Writer(buf)),
-		),
-	)
-
-	if err != nil {
-		t.Fatalf("Failed to initialize new AGI session: %v", err)
-	}
-	r, err = a.StreamFile("echo-test", "*#")
-	if err != nil {
-		t.Errorf("Failed to parse AGI responce: %v", err)
-	}
-	if buf.Len() == 0 {
-		t.Error("Failed to send AGI command")
-	}
-	str, _ := buf.ReadString(10)
-	if str != "STREAM FILE \"echo-test\" \"*#\"\n" {
-		t.Errorf("Failed to sent properly formatted AGI command: %s", str)
-	}
-	if r.Res != 1 {
-		t.Errorf("Failed to get the right numeric result. Expecting: 1, got: %d", r.Res)
-	}
-	if r.Dat != "1234" {
-		t.Errorf("Failed to properly parse the rest of the response. Expecting: 1234, got: %s", r.Dat)
-	}
-}
+// // Test the generation of AGI commands
+// func TestCmd(t *testing.T) {
+// 	var r Reply
+// 	var b []byte
+// 	buf := bytes.NewBuffer(b)
+// 	a := New()
+// 	data := append(env, "200 result=1 endpos=1234\n"...)
+// 	err := a.Init(
+// 		bufio.NewReadWriter(
+// 			bufio.NewReader(bytes.NewReader(data)),
+// 			bufio.NewWriter(io.Writer(buf)),
+// 		),
+// 	)
+//
+// 	if err != nil {
+// 		t.Fatalf("Failed to initialize new AGI session: %v", err)
+// 	}
+// 	r, err = a.StreamFile("echo-test", "*#")
+// 	if err != nil {
+// 		t.Errorf("Failed to parse AGI responce: %v", err)
+// 	}
+// 	if buf.Len() == 0 {
+// 		t.Error("Failed to send AGI command")
+// 	}
+// 	str, _ := buf.ReadString(10)
+// 	if str != "STREAM FILE \"echo-test\" \"*#\"\n" {
+// 		t.Errorf("Failed to sent properly formatted AGI command: %s", str)
+// 	}
+// 	if r.Res != 1 {
+// 		t.Errorf("Failed to get the right numeric result. Expecting: 1, got: %d", r.Res)
+// 	}
+// 	if r.Dat != "1234" {
+// 		t.Errorf("Failed to properly parse the rest of the response. Expecting: 1234, got: %s", r.Dat)
+// 	}
+// }
 
 // Benchmark AGI session initialisation
 func BenchmarkParseEnv(b *testing.B) {
@@ -261,25 +260,25 @@ func BenchmarkParseRes(b *testing.B) {
 	}
 }
 
-// Benchmark AGI Session
-func BenchmarkSession(b *testing.B) {
-	read := make([]byte, 0, len(env)+len(repVal))
-	read = append(read, env...)
-	read = append(read, repVal...)
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		a := New()
-		a.Init(
-			bufio.NewReadWriter(
-				bufio.NewReader(bytes.NewReader(read)),
-				bufio.NewWriter(ioutil.Discard),
-			),
-		)
-		a.Answer()
-		a.Verbose("Hello World")
-		a.StreamFile("echo-test", "1234567890*#")
-		a.Exec("Wait", "3")
-		a.Verbose("Goodbye World")
-		a.Hangup()
-	}
-}
+// // Benchmark AGI Session
+// func BenchmarkSession(b *testing.B) {
+// 	read := make([]byte, 0, len(env)+len(repVal))
+// 	read = append(read, env...)
+// 	read = append(read, repVal...)
+// 	b.ResetTimer()
+// 	for i := 0; i < b.N; i++ {
+// 		a := New()
+// 		a.Init(
+// 			bufio.NewReadWriter(
+// 				bufio.NewReader(bytes.NewReader(read)),
+// 				bufio.NewWriter(ioutil.Discard),
+// 			),
+// 		)
+// 		a.Answer()
+// 		a.Verbose("Hello World")
+// 		a.StreamFile("echo-test", "1234567890*#")
+// 		a.Exec("Wait", "3")
+// 		a.Verbose("Goodbye World")
+// 		a.Hangup()
+// 	}
+// }
