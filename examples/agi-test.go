@@ -41,7 +41,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Printf("Listening for FastAGI connections on 127.0.0.1:4573\n")
+		log.Printf("Listening for FastAGI connections on 0.0.0.0:4573\n")
 		defer ln.Close()
 		for {
 			conn, err := ln.Accept()
@@ -258,5 +258,9 @@ func testAgi(sess *agi.Session) {
 	sess.Verbose("================== Complete ======================")
 	sess.Verbose(fmt.Sprintf("%d tests completed, %d passed, %d failed", tests, pass, tests-pass))
 	sess.Verbose("==================================================")
+
+	if tests-pass != 0 {
+		sess.Failure()
+	}
 	return
 }

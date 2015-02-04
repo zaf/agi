@@ -12,6 +12,7 @@ import (
 	"crypto/tls"
 	"log"
 	"net"
+	"runtime"
 
 	"github.com/zaf/agi"
 )
@@ -24,6 +25,7 @@ const (
 )
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	// Create a TLS listener on port 4574 and start a new goroutine for each connection.
 	tlsCert, err := tls.LoadX509KeyPair(cert, key)
 	if err != nil {
