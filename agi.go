@@ -454,11 +454,11 @@ func (a *Session) TddMode(mode string) (Reply, error) {
 
 // Verbose logs a message to the asterisk verbose log.
 // Optional variable: level, the verbose level (1-4). Res is always 1.
-func (a *Session) Verbose(msg string, level ...int) (Reply, error) {
+func (a *Session) Verbose(msg interface{}, level ...int) (Reply, error) {
 	if level != nil {
-		return a.sendMsg(fmt.Sprintf("VERBOSE \"%s\" %d", msg, level[0]))
+		return a.sendMsg(fmt.Sprintf("VERBOSE \"%v\" %d", msg, level[0]))
 	}
-	return a.sendMsg(fmt.Sprintf("VERBOSE \"%s\"", msg))
+	return a.sendMsg(fmt.Sprintf("VERBOSE \"%v\"", msg))
 }
 
 // WaitForDigit waits for a digit to be pressed. Use -1 for the timeout value if you desire

@@ -4,7 +4,6 @@
 // at the top of the source tree.
 
 //Package agi implements the Asterisk Gateway Interface (http://www.asterisk.org).
-
 package agi
 
 import (
