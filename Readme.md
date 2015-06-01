@@ -32,6 +32,8 @@ if rep.Res == -1 {
 
 For more please see the code snippets in the examples folder.
 
+Package agi implements the Asterisk Gateway Interface (http://www.asterisk.org).
+
 ## Usage
 
 #### type Reply
@@ -224,7 +226,7 @@ func (a *Session) RawCommand(params ...interface{}) (Reply, error)
 ```
 RawCommand sends a user defined command. Use of this is generally discouraged.
 Useful only for debugging, testing and maybe compatibility with newer/altered
-versions of the AGI protocol. Command strings are passed unescaped.
+versions of the AGI protocol.
 
 #### func (*Session) ReceiveChar
 
@@ -478,7 +480,7 @@ is not TDD-capable.
 #### func (*Session) Verbose
 
 ```go
-func (a *Session) Verbose(msg string, level ...int) (Reply, error)
+func (a *Session) Verbose(msg interface{}, level ...int) (Reply, error)
 ```
 Verbose logs a message to the asterisk verbose log. Optional variable: level,
 the verbose level (1-4). Res is always 1.

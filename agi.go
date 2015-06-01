@@ -236,7 +236,7 @@ func (a *Session) Noop(params ...interface{}) (Reply, error) {
 
 // RawCommand sends a user defined command. Use of this is generally discouraged.
 // Useful only for debugging, testing and maybe compatibility with newer/altered versions of the AGI
-// protocol. Command strings are passed unescaped.
+// protocol.
 func (a *Session) RawCommand(params ...interface{}) (Reply, error) {
 	var cmd string
 	for _, par := range params {
