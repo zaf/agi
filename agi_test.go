@@ -1,4 +1,4 @@
-// Copyright (C) 2013 - 2014, Lefteris Zafiris <zaf.000@gmail.com>
+// Copyright (C) 2013 - 2015, Lefteris Zafiris <zaf.000@gmail.com>
 // This program is free software, distributed under the terms of
 // the BSD 3-Clause License. See the LICENSE file
 // at the top of the source tree.
@@ -13,7 +13,8 @@ import (
 )
 
 // AGI environment data
-var env = []byte(`agi_network: yes
+var env = []byte(
+	`agi_network: yes
 agi_network_script: foo?
 agi_request: agi://127.0.0.1/foo?
 agi_channel: SIP/1234-00000000
@@ -41,7 +42,8 @@ agi_arg_3: 3
 
 `)
 
-var envInv = []byte(`agi_:
+var envInv = []byte(
+	`agi_:
 agi_arg_1 foo
 agi_type:
 agi_verylongrandomparameter: 0
@@ -49,7 +51,8 @@ a
 `)
 
 // AGI Responses
-var rep = []byte(`200 result=1
+var rep = []byte(
+	`200 result=1
 200 result=1 (speech) endpos=1234 results=foo bar
 510 Invalid or unknown command
 511 Command Not Permitted on a dead channel
@@ -59,7 +62,8 @@ Answers channel if not already in answer state. Returns -1 on channel failure, o
 HANGUP
 `)
 
-var repInv = []byte(`200
+var repInv = []byte(
+	`200
 200 result 1
 200 result= 1
 200 result=
@@ -67,7 +71,8 @@ var repInv = []byte(`200
 some random reply that we are not supposed to get
 `)
 
-var repVal = []byte(`200 result=1
+var repVal = []byte(
+	`200 result=1
 200 result=1
 200 result=1 endpos=1234
 200 result=1
@@ -112,7 +117,7 @@ func TestParseEnv(t *testing.T) {
 	}
 }
 
-// Test AGI repsonse parsing
+// Test AGI response parsing
 func TestParseRespomse(t *testing.T) {
 	// Valid responses
 	a := New()

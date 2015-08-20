@@ -1,6 +1,6 @@
 // FastAGI 'Hello World' example in Go
 //
-// Copyright (C) 2013 - 2014, Lefteris Zafiris <zaf.000@gmail.com>
+// Copyright (C) 2013 - 2015, Lefteris Zafiris <zaf.000@gmail.com>
 // This program is free software, distributed under the terms of
 // the BSD 3-Clause License. See the LICENSE file
 // at the top of the source tree.

@@ -1,4 +1,4 @@
-// Copyright (C) 2013 - 2014, Lefteris Zafiris <zaf.000@gmail.com>
+// Copyright (C) 2013 - 2015, Lefteris Zafiris <zaf.000@gmail.com>
 // This program is free software, distributed under the terms of
 // the BSD 3-Clause License. See the LICENSE file
 // at the top of the source tree.
@@ -142,7 +142,7 @@ func (a *Session) DatabasePut(family, key, value string) (Reply, error) {
 // Exec executes a given application. Res contains whatever the dialplan application returns,
 // or -2 on failure to find the application.
 func (a *Session) Exec(app, options string) (Reply, error) {
-	return a.sendMsg(fmt.Sprintf("EXEC \"%s\" \"%s\"", app, options))
+	return a.sendMsg(fmt.Sprintf("EXEC %s \"%s\"", app, options))
 }
 
 // Failure causes asterisk to terminate the AGI session and set the AGISTATUS channel variable to 'FAILURE'.

@@ -1,4 +1,4 @@
-// Copyright (C) 2013 - 2014, Lefteris Zafiris <zaf.000@gmail.com>
+// Copyright (C) 2013 - 2015, Lefteris Zafiris <zaf.000@gmail.com>
 // This program is free software, distributed under the terms of
 // the BSD 3-Clause License. See the LICENSE file
 // at the top of the source tree.
@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	envMin = 18  // Minimun number of AGI environment args
+	envMin = 18  // Minimum number of AGI environment args
 	envMax = 150 // Maximum number of AGI environment args
 )
 
@@ -29,7 +29,7 @@ func (a *Session) parseEnv() error {
 		// Strip trailing newline
 		line = line[:len(line)-1]
 		ind := bytes.IndexByte(line, ':')
-		// "agi_type" is the shortest length key, "agi_network_script" the longest, anything ouside these boundaries is invalid.
+		// "agi_type" is the shortest length key, "agi_network_script" the longest, anything outside these boundaries is invalid.
 		if ind < len("agi_type") || ind > len("agi_network_script") || ind == len(line)-1 {
 			err = fmt.Errorf("malformed environment input: %s", string(line))
 			a.Env = nil
@@ -56,7 +56,6 @@ func (a *Session) sendMsg(s string) (Reply, error) {
 	}
 	s = strings.Replace(s, "\r", " ", -1)
 	s = strings.Replace(s, "\n", " ", -1)
-	//s = strings.Replace(s, "\"", "\\\\\\\"", -1)
 	if _, err := fmt.Fprintln(a.buf, s); err != nil {
 		return Reply{}, err
 	}
@@ -66,7 +65,7 @@ func (a *Session) sendMsg(s string) (Reply, error) {
 	return a.parseResponse()
 }
 
-// parseResponse reads back and parses AGI repsonse. Returns the Reply and the protocol error, if any.
+// parseResponse reads back and parses AGI response. Returns the Reply and the protocol error, if any.
 func (a *Session) parseResponse() (Reply, error) {
 	r := Reply{}
 	line, err := a.buf.ReadBytes(10)
@@ -77,7 +76,7 @@ func (a *Session) parseResponse() (Reply, error) {
 	line = line[:len(line)-1]
 	ind := bytes.IndexByte(line, ' ')
 	if ind <= 0 || ind == len(line)-1 {
-		// Line doesnt match /^\w+\s.+$/
+		// Line doesn't match /^\w+\s.+$/
 		if bytes.Equal(line, []byte("HANGUP")) {
 			err = fmt.Errorf("HANGUP")
 		} else {
