@@ -56,7 +56,7 @@ func (a *Session) sendMsg(s string) (Reply, error) {
 	}
 	s = strings.Replace(s, "\r", " ", -1)
 	s = strings.Replace(s, "\n", " ", -1)
-	if _, err := fmt.Fprintln(a.buf, s); err != nil {
+	if _, err := a.buf.WriteString(s + "\n"); err != nil {
 		return Reply{}, err
 	}
 	if err := a.buf.Flush(); err != nil {

@@ -72,12 +72,12 @@ func (a *Session) Init(rw *bufio.ReadWriter) error {
 
 // Answer answers channel. Res is -1 on channel failure, or 0 if successful.
 func (a *Session) Answer() (Reply, error) {
-	return a.sendMsg(fmt.Sprintf("ANSWER"))
+	return a.sendMsg("ANSWER")
 }
 
 // AsyncagiBreak interrupts Async AGI. Res is always 0.
 func (a *Session) AsyncagiBreak() (Reply, error) {
-	return a.sendMsg(fmt.Sprintf("ASYNCAGI BREAK"))
+	return a.sendMsg("ASYNCAGI BREAK")
 }
 
 //ChannelStatus Res contains the status of the given channel, if no channel specified
@@ -95,7 +95,7 @@ func (a *Session) ChannelStatus(channel ...string) (Reply, error) {
 	if channel != nil {
 		return a.sendMsg(fmt.Sprintf("CHANNEL STATUS \"%s\"", channel[0]))
 	}
-	return a.sendMsg(fmt.Sprintf("CHANNEL STATUS"))
+	return a.sendMsg("CHANNEL STATUS")
 }
 
 // ControlStreamFile sends audio file on channel and allows the listener to control the stream.
@@ -219,7 +219,7 @@ func (a *Session) Hangup(channel ...string) (Reply, error) {
 	if channel != nil {
 		r, err = a.sendMsg(fmt.Sprintf("HANGUP \"%s\"", channel[0]))
 	} else {
-		r, err = a.sendMsg(fmt.Sprintf("HANGUP"))
+		r, err = a.sendMsg("HANGUP")
 	}
 	//a.buf.ReadBytes(10) // Read 'HANGUP' command from asterisk
 	return r, err
@@ -403,7 +403,7 @@ func (a *Session) SpeechDeactivateGrammar(grammar string) (Reply, error) {
 
 // SpeechDestroy destroys a speech object. Res is 1 on success 0 on error.
 func (a *Session) SpeechDestroy() (Reply, error) {
-	return a.sendMsg(fmt.Sprintf("SPEECH DESTROY"))
+	return a.sendMsg("SPEECH DESTROY")
 }
 
 // SpeechLoadGrammar loads a grammar. Res is 1 on success 0 on error.
