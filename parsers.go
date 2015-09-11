@@ -21,8 +21,9 @@ const (
 // parseEnv reads and stores AGI environment.
 func (a *Session) parseEnv() error {
 	var err error
+	var line []byte
 	for i := 0; i <= envMax; i++ {
-		line, err := a.buf.ReadBytes(10)
+		line, err = a.buf.ReadBytes(10)
 		if err != nil || len(line) <= len("\r\n") {
 			break
 		}

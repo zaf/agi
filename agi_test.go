@@ -133,7 +133,7 @@ func TestParseRespomse(t *testing.T) {
 		t.Errorf("Error parsing AGI 200 response. Expecting: 1, got: %d", r.Res)
 	}
 	if r.Dat != "" {
-		t.Errorf("Error parsing AGI 200 response. Got unexpected data: %d", r.Dat)
+		t.Errorf("Error parsing AGI 200 response. Got unexpected data: %s", r.Dat)
 	}
 
 	r, err = a.parseResponse()
