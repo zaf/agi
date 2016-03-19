@@ -217,7 +217,7 @@ func TestParseRespomse(t *testing.T) {
 // 	}
 // 	r, err = a.StreamFile("echo-test", "*#")
 // 	if err != nil {
-// 		t.Errorf("Failed to parse AGI responce: %v", err)
+// 		t.Errorf("Failed to parse AGI response: %v", err)
 // 	}
 // 	if buf.Len() == 0 {
 // 		t.Error("Failed to send AGI command")

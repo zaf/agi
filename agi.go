@@ -293,7 +293,7 @@ func (a *Session) SayDate(date int64, escape string) (Reply, error) {
 }
 
 // SayDateTime says a given time (Unix time format). Optional parameters:
-// fomrat, the format the time should be said in. See voicemail.conf (defaults to ABdY 'digits/at' IMp).
+// format, the format the time should be said in. See voicemail.conf (defaults to ABdY 'digits/at' IMp).
 // timezone, acceptable values can be found in /usr/share/zoneinfo. Defaults to machine default.
 // Res is 0 if playback completes without a digit being pressed, the ASCII numerical
 // value of the digit if one was pressed or -1 on error/hang-up.
