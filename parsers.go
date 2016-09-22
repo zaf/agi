@@ -8,6 +8,7 @@ package agi
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -79,7 +80,7 @@ func (a *Session) parseResponse() (Reply, error) {
 	if ind <= 0 || ind == len(line)-1 {
 		// Line doesn't match /^\w+\s.+$/
 		if bytes.Equal(line, []byte("HANGUP")) {
-			err = fmt.Errorf("HANGUP")
+			err = errors.New("HANGUP")
 		} else {
 			err = fmt.Errorf("malformed or partial agi response: %s", string(line))
 		}
@@ -112,13 +113,13 @@ func (a *Session) parseResponse() (Reply, error) {
 		}
 		err = fmt.Errorf("malformed 200 response: %s", string(line))
 	case "510":
-		err = fmt.Errorf("invalid or unknown command")
+		err = errors.New("invalid or unknown command")
 	case "511":
-		err = fmt.Errorf("command not permitted on a dead channel")
+		err = errors.New("command not permitted on a dead channel")
 	case "520":
-		err = fmt.Errorf("invalid command syntax")
+		err = errors.New("invalid command syntax")
 	case "520-Invalid":
-		err = fmt.Errorf("invalid command syntax")
+		err = errors.New("invalid command syntax")
 		a.buf.ReadBytes(10) // Read Command syntax doc.
 	default:
 		err = fmt.Errorf("malformed or partial agi response: %s", string(line))
