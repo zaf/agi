@@ -236,6 +236,8 @@ func TestParseRespomse(t *testing.T) {
 
 // Benchmark AGI session initialisation
 func BenchmarkParseEnv(b *testing.B) {
+	b.SetBytes(int64(len(env)))
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		a := New()
 		a.Init(
@@ -252,6 +254,7 @@ func BenchmarkParseRes(b *testing.B) {
 	read := make([]byte, 0, len(repVal)+len(rep))
 	read = append(read, repVal...)
 	read = append(read, rep...)
+	b.SetBytes(int64(len(read)))
 	a := New()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
