@@ -7,6 +7,7 @@
 package agi
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -14,25 +15,18 @@ import (
 	"strings"
 )
 
-const (
-	envMin = 18  // Minimum number of AGI environment args
-	envMax = 150 // Maximum number of AGI environment args
-)
-
 // parseEnv reads and stores AGI environment.
 func (a *Session) parseEnv() error {
 	var err error
 	var line []byte
-	for i := 0; i <= envMax; i++ {
-		line, err = a.buf.ReadBytes(10)
-		if err != nil || len(line) <= len("\r\n") {
-			break
+	s := bufio.NewScanner(a.buf)
+	for s.Scan() {
+		line = s.Bytes()
+		if len(line) <= len("\r\n") {
+			break // end of input
 		}
-		// Strip trailing newline
-		line = line[:len(line)-1]
 		ind := bytes.IndexByte(line, ':')
-		// "agi_type" is the shortest length key, "agi_network_script" the longest, anything outside these boundaries is invalid.
-		if ind < len("agi_type") || ind > len("agi_network_script") || ind == len(line)-1 {
+		if ind == -1 || ind == len(line)-1 {
 			err = fmt.Errorf("malformed environment input: %s", string(line))
 			a.Env = nil
 			return err
@@ -42,9 +36,10 @@ func (a *Session) parseEnv() error {
 		value := string(line[ind:])
 		a.Env[key] = value
 	}
-	if len(a.Env) < envMin {
-		err = fmt.Errorf("incomplete environment with only %d env vars", len(a.Env))
+	if err := s.Err(); err != nil {
+		err = fmt.Errorf("error reading environment input: %s", err)
 		a.Env = nil
+		return err
 	}
 	return err
 }

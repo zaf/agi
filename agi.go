@@ -38,6 +38,10 @@ import (
 	"strings"
 )
 
+const (
+	envMin = 18 // Minimum number of AGI environment args
+)
+
 // Session is a struct holding AGI environment vars and the I/O handlers.
 type Session struct {
 	Env map[string]string //AGI environment variables.
