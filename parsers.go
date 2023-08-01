@@ -19,6 +19,7 @@ const (
 	envMax = 150 // Maximum number of AGI environment args
 )
 
+// Errors returned from Asterisk as a response to a message.
 var (
 	ErrHangupResponse = errors.New("HANGUP")
 	Err510Response    = errors.New("invalid or unknown command")
