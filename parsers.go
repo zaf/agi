@@ -3,7 +3,7 @@
 // the BSD 3-Clause License. See the LICENSE file
 // at the top of the source tree.
 
-//Package agi implements the Asterisk Gateway Interface (http://www.asterisk.org).
+// Package agi implements the Asterisk Gateway Interface (http://www.asterisk.org).
 package agi
 
 import (
@@ -17,6 +17,13 @@ import (
 const (
 	envMin = 18  // Minimum number of AGI environment args
 	envMax = 150 // Maximum number of AGI environment args
+)
+
+var (
+	ErrHangupResponse = errors.New("HANGUP")
+	Err510Response    = errors.New("invalid or unknown command")
+	Err511Response    = errors.New("command not permitted on a dead channel")
+	Err520Response    = errors.New("invalid command syntax")
 )
 
 // parseEnv reads and stores AGI environment.
@@ -80,9 +87,9 @@ func (a *Session) parseResponse() (Reply, error) {
 	if ind <= 0 || ind == len(line)-1 {
 		// Line doesn't match /^\w+\s.+$/
 		if bytes.Equal(line, []byte("HANGUP")) {
-			err = errors.New("HANGUP")
+			err = ErrHangupResponse
 		} else {
-			err = fmt.Errorf("malformed or partial agi response: %s", string(line))
+			err = ErrMalformedAGIResponse(string(line))
 		}
 		return r, err
 	}
@@ -97,32 +104,52 @@ func (a *Session) parseResponse() (Reply, error) {
 				// Line matches /^\w$/
 				r.Res, err = strconv.Atoi(string(line))
 				if err != nil {
-					err = fmt.Errorf("failed to parse AGI 200 reply: %v", err)
+					err = ErrFailedToParse200Response{err}
 				}
 				break
 			} else if spInd > 0 && spInd < len(line)-1 {
 				// Line matches /^\w+\s.+$/
 				r.Res, err = strconv.Atoi(string(line[:spInd]))
 				if err != nil {
-					err = fmt.Errorf("failed to parse AGI 200 reply: %v", err)
+					err = ErrFailedToParse200Response{err}
 				}
 				// Strip leading space and save additional returned data.
 				r.Dat = string(line[spInd+1:])
 				break
 			}
 		}
-		err = fmt.Errorf("malformed 200 response: %s", string(line))
+		err = ErrMalformed200Response(string(line))
 	case "510":
-		err = errors.New("invalid or unknown command")
+		err = Err510Response
 	case "511":
-		err = errors.New("command not permitted on a dead channel")
+		err = Err511Response
 	case "520":
-		err = errors.New("invalid command syntax")
+		err = Err520Response
 	case "520-Invalid":
-		err = errors.New("invalid command syntax")
+		err = Err520Response
 		a.buf.ReadBytes(10) // Read Command syntax doc.
 	default:
-		err = fmt.Errorf("malformed or partial agi response: %s", string(line))
+		err = ErrMalformedAGIResponse(string(line))
 	}
 	return r, err
+}
+
+type ErrMalformed200Response string
+
+func (e ErrMalformed200Response) Error() string {
+	return "malformed 200 response: " + string(e)
+}
+
+type ErrMalformedAGIResponse string
+
+func (e ErrMalformedAGIResponse) Error() string {
+	return "malformed or partial agi response: " + string(e)
+}
+
+type ErrFailedToParse200Response struct {
+	err error
+}
+
+func (e ErrFailedToParse200Response) Error() string {
+	return fmt.Sprintf("failed to parse AGI 200 reply: %v", e.err)
 }
